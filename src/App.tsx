@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import {
   CATALOGO_PRODUCTOS,
   MEDIDAS_ESTANDAR,
@@ -19,7 +21,9 @@ import {
   FileText,
   ShieldCheck,
   Copy,
-  X
+  X,
+  ImageIcon,
+  FileDown
 } from './components/Icons';
 
 const FECHA_EMISION_HOY = new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -36,6 +40,10 @@ export default function App() {
 
   const [mostrarModal, setMostrarModal] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [generandoPDF, setGenerandoPDF] = useState(false);
+  const [generandoImg, setGenerandoImg] = useState(false);
+
+  const modalHojaRef = useRef<HTMLDivElement>(null);
 
   const breakdown = calcularPresupuesto(config);
 
@@ -49,6 +57,40 @@ export default function App() {
   const handleWhatsApp = () => {
     const texto = generarTextoWhatsApp(breakdown);
     window.open(`https://wa.me/${DATOS_EMPRESA.whatsappNumero}?text=${texto}`, '_blank');
+  };
+
+  const handleDescargarImagen = async () => {
+    if (!modalHojaRef.current) return;
+    setGenerandoImg(true);
+    try {
+      const canvas = await html2canvas(modalHojaRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      link.download = `Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${breakdown.medida.ancho}x${breakdown.medida.alto}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Error generando imagen:', err);
+    } finally {
+      setGenerandoImg(false);
+    }
+  };
+
+  const handleDescargarPDF = async () => {
+    if (!modalHojaRef.current) return;
+    setGenerandoPDF(true);
+    try {
+      const canvas = await html2canvas(modalHojaRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${breakdown.medida.ancho}x${breakdown.medida.alto}.pdf`);
+    } catch (err) {
+      console.error('Error generando PDF:', err);
+    } finally {
+      setGenerandoPDF(false);
+    }
   };
 
   return (
@@ -402,8 +444,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* CUERPO MODAL MEMBRETADO */}
-            <div className="p-6 overflow-y-auto space-y-4 text-xs">
+            {/* CUERPO MODAL MEMBRETADO (IMPRIMIBLE / EXPORTABLE) */}
+            <div ref={modalHojaRef} className="p-6 overflow-y-auto space-y-4 text-xs bg-white">
               
               {/* LOGO Y DATOS EMPRESA */}
               <div className="text-center pb-3 border-b border-slate-200">
@@ -491,24 +533,44 @@ export default function App() {
 
             </div>
 
-            {/* BOTONES ACCIÓN */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50 grid grid-cols-2 gap-2">
+            {/* BOTONES ACCIÓN MULTI-FORMATO (WHATSAPP, PDF, IMAGEN, COPIAR) */}
+            <div className="p-3.5 sm:p-4 border-t border-slate-200 bg-slate-50 grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={handleCopiar}
-                className="min-h-[46px] px-3 py-2 border border-slate-300 hover:bg-slate-200 text-slate-800 font-bold rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 text-xs bg-white shadow-sm"
+                onClick={handleWhatsApp}
+                className="min-h-[46px] px-3 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition text-xs"
               >
-                {copiado ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copiado ? '¡Copiado!' : 'Copiar Texto'}</span>
+                <Send className="w-4 h-4" />
+                <span>WhatsApp</span>
               </button>
 
               <button
                 type="button"
-                onClick={handleWhatsApp}
-                className="min-h-[46px] px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/30 transition active:scale-95 text-xs"
+                onClick={handleDescargarPDF}
+                disabled={generandoPDF}
+                className="min-h-[46px] px-3 py-2 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition text-xs disabled:opacity-50"
               >
-                <Send className="w-4 h-4" />
-                <span>Enviar WhatsApp</span>
+                <FileDown className="w-4 h-4" />
+                <span>{generandoPDF ? 'Generando...' : 'Descargar PDF'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDescargarImagen}
+                disabled={generandoImg}
+                className="min-h-[46px] px-3 py-2 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition text-xs disabled:opacity-50"
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span>{generandoImg ? 'Generando...' : 'Guardar Imagen'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCopiar}
+                className="min-h-[46px] px-3 py-2 border border-slate-300 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold rounded-xl flex items-center justify-center gap-1.5 transition text-xs bg-white shadow-sm"
+              >
+                {copiado ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                <span>{copiado ? '¡Copiado!' : 'Copiar Texto'}</span>
               </button>
             </div>
 
