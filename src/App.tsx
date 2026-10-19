@@ -80,11 +80,11 @@ export default function App() {
     setGenerandoPDF(true);
     try {
       const canvas = await html2canvas(modalHojaRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.82);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       pdf.save(`Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${breakdown.medida.ancho}x${breakdown.medida.alto}.pdf`);
     } catch (err) {
       console.error('Error generando PDF:', err);
