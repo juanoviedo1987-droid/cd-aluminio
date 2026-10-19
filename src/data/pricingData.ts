@@ -72,6 +72,10 @@ export function calcularPresupuesto(config: QuoteConfig): QuoteBreakdown {
   const adicionalVidrioDVH = Math.round(subtotalPerfileria * infoVidrio.recargoPorcentaje);
   const subtotalAbertura = subtotalPerfileria + adicionalVidrioDVH;
 
+  // 4. Servicio de Colocación en Obra
+  const costoColocacion = config.conColocacion ? 1800 : 0;
+  const totalFinal = subtotalAbertura + costoColocacion;
+
   return {
     medida,
     serieNombre: infoSerie.nombre.split(' (')[0],
@@ -82,8 +86,8 @@ export function calcularPresupuesto(config: QuoteConfig): QuoteBreakdown {
     subtotalPerfileria,
     adicionalVidrioDVH,
     subtotalAbertura,
-    costoColocacion: 0,
-    totalFinal: subtotalAbertura,
+    costoColocacion,
+    totalFinal,
     vigenciaDias: DATOS_EMPRESA.vigenciaDias,
   };
 }
@@ -93,6 +97,19 @@ export function formatearMoneda(monto: number): string {
 }
 
 export function generarTextoWhatsApp(breakdown: QuoteBreakdown): string {
+  const lineasColocacion = breakdown.costoColocacion > 0
+    ? [
+        `*Colocación en Obra:* Incluida ($ 1.800 UYU est.)`,
+        `📸 *Importante:* Enviar foto del vano o abertura a sustituir para validar colocación.`
+      ]
+    : [
+        `*Modalidad:* Retiro en taller / Sin colocación`
+      ];
+
+  const lineaEntrega = breakdown.costoColocacion > 0
+    ? `• Coordinación e instalación en obra previa validación de foto del vano`
+    : `• Retiro en taller sin costo (Gral. Flores 2979)`;
+
   const lineas = [
     `*PRESUPUESTO CD ALUMINIO*`,
     `Gral. Flores 2979, Montevideo`,
@@ -102,12 +119,13 @@ export function generarTextoWhatsApp(breakdown: QuoteBreakdown): string {
     `*Terminación:* ${breakdown.colorNombre}`,
     `*Medidas:* ${breakdown.medida.ancho} x ${breakdown.medida.alto} mm`,
     `*Cristal:* ${breakdown.vidrioNombre}`,
+    ...lineasColocacion,
     `----------------------------------------`,
     `*TOTAL: ${formatearMoneda(breakdown.totalFinal)} UYU*`,
     `----------------------------------------`,
     `• Validez: ${breakdown.vigenciaDias} días`,
     `• Forma de pago: 50% seña, saldo contra entrega`,
-    `• Retiro en taller sin costo (Gral. Flores 2979)`,
+    lineaEntrega,
     `• WhatsApp oficial: 095 262 858`,
     `\n_Cotizado desde Web App Móvil CD Aluminio_`
   ];

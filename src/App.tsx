@@ -22,6 +22,8 @@ import {
   X
 } from './components/Icons';
 
+const FECHA_EMISION_HOY = new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
 export default function App() {
   const [productoSeleccionado, setProductoSeleccionado] = useState('ventana-corrediza');
   const [config, setConfig] = useState<QuoteConfig>({
@@ -217,6 +219,60 @@ export default function App() {
                 </select>
               </div>
 
+              {/* 6. SERVICIO DE COLOCACIÓN EN OBRA (SWITCH TÁCTIL ESTILO IOS) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  6. Servicio de Colocación en Obra
+                </label>
+
+                <div 
+                  onClick={() => setConfig(prev => ({ ...prev, conColocacion: !prev.conColocacion }))}
+                  className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all cursor-pointer select-none min-h-[58px] ${
+                    config.conColocacion 
+                      ? 'bg-orange-50 border-orange-500 shadow-sm' 
+                      : 'bg-slate-50 border-slate-300 hover:border-slate-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base transition-colors ${
+                      config.conColocacion ? 'bg-orange-500 text-white shadow-xs' : 'bg-slate-200 text-slate-500'
+                    }`}>
+                      🔧
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-extrabold text-slate-900 block text-sm">
+                        {config.conColocacion ? 'Con Colocación (+ $ 1.800 UYU est.)' : 'Sin Colocación (Retiro en Taller)'}
+                      </span>
+                      <span className="text-slate-500 font-medium">
+                        {config.conColocacion ? 'Instalación y ajuste en obra en Montevideo' : 'Retiro por taller en Gral. Flores 2979'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Switch iOS Táctil */}
+                  <div className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 shrink-0 ${
+                    config.conColocacion ? 'bg-orange-500' : 'bg-slate-300'
+                  }`}>
+                    <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center text-[10px] font-bold ${
+                      config.conColocacion ? 'translate-x-6 text-orange-600' : 'translate-x-0 text-slate-400'
+                    }`}>
+                      {config.conColocacion ? 'SÍ' : 'NO'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banner de Foto de Sustitución si hay Colocación */}
+                {config.conColocacion && (
+                  <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 flex items-start gap-2.5 text-amber-950 shadow-xs animate-in fade-in duration-200">
+                    <span className="text-xl leading-none shrink-0">📸</span>
+                    <div className="text-xs leading-snug">
+                      <strong className="font-bold text-amber-900 block mb-0.5">Foto obligatoria para colocación:</strong>
+                      <span>Al enviar el presupuesto por WhatsApp, el cliente debe adjuntar una foto del vano o abertura a sustituir para validar encastre y fijaciones.</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
 
@@ -254,6 +310,12 @@ export default function App() {
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Vidrio:</span>
                   <span className="font-semibold text-slate-900">{breakdown.vidrioNombre}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Colocación:</span>
+                  <span className={`font-semibold ${breakdown.costoColocacion > 0 ? 'text-orange-600' : 'text-slate-900'}`}>
+                    {breakdown.costoColocacion > 0 ? '+ $ 1.800 UYU (En obra)' : 'Sin colocación (Taller)'}
+                  </span>
                 </div>
               </div>
 
@@ -366,7 +428,7 @@ export default function App() {
                 <div>
                   <span className="text-slate-500 block">Fecha de Emisión:</span>
                   <span className="font-bold text-slate-800">
-                    {new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    {FECHA_EMISION_HOY}
                   </span>
                 </div>
                 <div className="text-right">
@@ -403,6 +465,12 @@ export default function App() {
                     <span className="text-slate-500">Cristal:</span>
                     <span className="font-bold text-slate-900">{breakdown.vidrioNombre}</span>
                   </div>
+                  <div className="p-2.5 flex justify-between bg-slate-50/50">
+                    <span className="text-slate-500">Colocación:</span>
+                    <span className={`font-bold ${breakdown.costoColocacion > 0 ? 'text-orange-600' : 'text-slate-900'}`}>
+                      {breakdown.costoColocacion > 0 ? '+ $ 1.800 UYU (En obra)' : 'Sin colocación (Retiro en taller)'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -417,8 +485,8 @@ export default function App() {
               {/* CONDICIONES */}
               <div className="text-[10px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1">
                 <p className="font-bold text-slate-800">• Forma de Pago: {DATOS_EMPRESA.condicionesPago}.</p>
-                <p>• Retiro en taller en Gral. Flores 2979, Montevideo.</p>
-                <p>• Los presupuestos no incluyen flete ni colocación en obra salvo previa coordinación.</p>
+                <p>• {breakdown.costoColocacion > 0 ? 'Colocación en obra sujeta a validación técnica previa con foto del vano.' : 'Retiro en taller en Gral. Flores 2979, Montevideo.'}</p>
+                <p>• Validez de la cotización: {breakdown.vigenciaDias} días corridos.</p>
               </div>
 
             </div>
