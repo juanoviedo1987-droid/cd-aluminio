@@ -107,7 +107,7 @@ export default function App() {
             />
             <div>
               <h1 className="text-base lg:text-lg font-black tracking-tight leading-none text-white">
-                CD <span className="text-orange-500">ALUMINIO</span>
+                <span className="text-white">C</span><span className="text-orange-500">D</span> <span className="text-white font-normal">Aluminio</span>
               </h1>
               <p className="text-[10px] lg:text-xs text-slate-400 tracking-wider font-medium uppercase mt-0.5">
                 Carpintería en Aluminio &bull; Montevideo
@@ -455,7 +455,7 @@ export default function App() {
                   className="w-16 h-16 mx-auto object-contain mb-1 drop-shadow"
                 />
                 <h3 className="font-black text-base text-black tracking-tight">
-                  CD <span className="text-orange-600">ALUMINIO</span>
+                  <span className="text-black">C</span><span className="text-orange-600">D</span> <span className="text-black font-normal">Aluminio</span>
                 </h3>
                 <div className="text-[11px] text-slate-600 font-medium">
                   {DATOS_EMPRESA.rubro}
