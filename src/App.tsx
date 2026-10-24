@@ -26,7 +26,6 @@ import {
   Lock,
   KeyRound
 } from './components/Icons';
-import { WindowPreview2D } from './components/WindowPreview2D';
 
 const FECHA_EMISION_HOY = new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const PIN_ACCESO_CORRECTO = '2979';
@@ -544,22 +543,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* COLUMNA DERECHA: PLANO TÉCNICO 2D Y RESUMEN */}
+          {/* COLUMNA DERECHA: RESUMEN EJECUTIVO */}
           <div className="md:col-span-5 lg:col-span-4 space-y-4">
             
-            {/* 1. NOVEDAD: PLANO TÉCNICO 2D EN TIEMPO REAL */}
-            <WindowPreview2D
-              productoId={prodActual.id}
-              nombre={prodActual.nombre}
-              anchoStr={config.ancho}
-              altoStr={config.alto}
-              colorHex={COLORES[config.color]?.hex || '#475569'}
-              colorNombre={breakdown.colorNombre}
-              serieNombre={breakdown.serieNombre}
-              vidrioNombre={breakdown.vidrioNombre}
-            />
-
-            {/* 2. PANEL DE RESUMEN EJECUTIVO */}
+            {/* PANEL DE RESUMEN EJECUTIVO */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 md:sticky md:top-24">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
