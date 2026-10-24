@@ -1,0 +1,21 @@
+Tipo de Parámetro,Nombre del Parámetro,Tipo de Ajuste,Valor / Porcentaje,Descripción para el Cliente,Activo en App
+Línea / Serie,Serie 20,Factor Multiplicador,-15% (Económica),Línea residencial liviana,SI
+Línea / Serie,Serie 25,Base de Cálculo,0% (Base),Línea tradicional de mayor salida,SI
+Línea / Serie,Serie 30,Factor Multiplicador,+30% (Reforzada),Perfilería robusta para puertas y batientes,SI
+Línea / Serie,Línea A82 (Alta Prestación),Factor Multiplicador,+45%,Aislación superior y hermeticidad,SI
+Línea / Serie,Línea Probba (Alta Prestación),Factor Multiplicador,+60%,Grandes luces y resistencia al viento,SI
+Línea / Serie,Línea Gala CR (Alta Prestación),Factor Multiplicador,+75%,Máxima aislación con rotura puente térmico,SI
+Color / Terminación,Anodizado Natural,Color Base,0%,Plata mate anticorrosión tradicional,SI
+Color / Terminación,Blanco,Pintura Horneada,Consultar taller,Pintura electrostática blanca,SI
+Color / Terminación,Negro,Pintura Horneada,Consultar taller,Pintura electrostática microtexturada,SI
+Color / Terminación,Anolock,Anodizado Oscuro,+10% est.,Anodizado marrón bronce oscuro,SI
+Color / Terminación,Pintura electrostática,Color Especial,Consultar carta RAL,Carta de colores especiales a elección,SI
+Cristal / Vidrio,Cristal 4mm,Cristal Base,Base,Cristal flotado incoloro estándar 4 mm,SI
+Cristal / Vidrio,Cristal 5mm,Cristal Flotado,A convenir,Cristal flotado incoloro 5 mm,SI
+Cristal / Vidrio,Cristal 6mm,Cristal Templado/Flotado,A convenir,Mayor rigidez y resistencia,SI
+Cristal / Vidrio,Cristal 8mm,Cristal de Seguridad,A convenir,Templado o laminado de seguridad,SI
+Cristal / Vidrio,DVH (Doble Vidriado Hermético),Cámara Aislante,+25% est.,Doble vidrio con cámara termoacústica,SI
+Cristal / Vidrio,Policarbonato alveolar,Placa Liviana,A convenir,Placa alveolar para techos,SI
+Cristal / Vidrio,Policarbonato compacto,Placa Antivandálica,A convenir,Ultra resistente al impacto,SI
+Servicio en Obra,Colocación en Obra (Montevideo),Mano de Obra,A coordinar,Instalación y ajuste en obra con foto previa,SI
+Servicio en Obra,Retiro en Taller,Sin Costo,$ 0,Retiro en taller oficial Gral. Flores 2979,SI

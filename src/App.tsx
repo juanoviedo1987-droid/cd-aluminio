@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import QRCode from 'qrcode';
 import {
   CATALOGO_PRODUCTOS,
   FACTORES_SERIE,
@@ -25,6 +26,7 @@ import {
   Lock,
   KeyRound
 } from './components/Icons';
+import { WindowPreview2D } from './components/WindowPreview2D';
 
 const FECHA_EMISION_HOY = new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const PIN_ACCESO_CORRECTO = '2979';
@@ -53,10 +55,27 @@ export default function App() {
   const [copiado, setCopiado] = useState(false);
   const [generandoPDF, setGenerandoPDF] = useState(false);
   const [generandoImg, setGenerandoImg] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   const modalHojaRef = useRef<HTMLDivElement>(null);
 
   const breakdown = calcularPresupuesto(config);
+
+  // Generar QR dinámico para WhatsApp con el presupuesto configurado
+  useEffect(() => {
+    const textoWhatsApp = generarTextoWhatsApp(breakdown, prodActual.nombre);
+    const whatsappUrl = `https://wa.me/${DATOS_EMPRESA.whatsappNumero}?text=${textoWhatsApp}`;
+    QRCode.toDataURL(whatsappUrl, {
+      width: 140,
+      margin: 1,
+      color: {
+        dark: '#18181b',
+        light: '#ffffff',
+      },
+    })
+      .then(url => setQrDataUrl(url))
+      .catch(err => console.error('Error generando QR:', err));
+  }, [breakdown, prodActual.nombre]);
 
   const handleCopiar = () => {
     const textoDecodificado = decodeURIComponent(generarTextoWhatsApp(breakdown, prodActual.nombre));
@@ -138,13 +157,11 @@ export default function App() {
     setPinIngresado('');
   };
 
-  // PANTALLA DE BLOQUEO CON PIN (ADAPTADA A CELULAR Y PC)
+  // PANTALLA DE BLOQUEO CON PIN
   if (!estaAutenticado) {
     return (
       <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 selection:bg-orange-500 selection:text-white">
         <div className="w-full max-w-sm bg-black border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
-          
-          {/* Logo Oficial Protagónico */}
           <div className="space-y-2">
             <img
               src={DATOS_EMPRESA.logoLocal}
@@ -161,7 +178,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Estado del PIN (4 círculos indicadores) */}
           <div className="flex justify-center items-center gap-3 py-2">
             {[0, 1, 2, 3].map((index) => {
               const tieneDigito = pinIngresado.length > index;
@@ -186,7 +202,6 @@ export default function App() {
             </p>
           )}
 
-          {/* INPUT PARA TECLADO FÍSICO EN PC */}
           <div className="space-y-1">
             <label className="text-[11px] text-neutral-400 uppercase tracking-wider block font-semibold">
               Ingresar PIN (Teclado o botones):
@@ -209,7 +224,6 @@ export default function App() {
             />
           </div>
 
-          {/* TECLADO NUMÉRICO TÁCTIL (IDEAL CELULAR) */}
           <div className="grid grid-cols-3 gap-2.5 pt-1">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
               <button
@@ -248,7 +262,6 @@ export default function App() {
           <div className="text-[10px] text-neutral-500 pt-2 border-t border-neutral-900">
             Gral. Flores 2979 &bull; Montevideo
           </div>
-
         </div>
       </div>
     );
@@ -256,11 +269,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-orange-500 selection:text-white flex flex-col">
-      
-      {/* HEADER CORPORATIVO FULL-WIDTH CON CONTENIDO CENTRADO */}
+      {/* HEADER CORPORATIVO */}
       <header className="bg-black text-white px-4 lg:px-8 py-3.5 sticky top-0 z-30 shadow-md border-b border-neutral-800">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          {/* Logo Oficial y Título */}
           <div className="flex items-center gap-3.5">
             <div className="relative">
               <img
@@ -312,7 +323,6 @@ export default function App() {
           
           {/* COLUMNA IZQUIERDA: CONFIGURADOR FORMULARIO */}
           <div className="md:col-span-7 lg:col-span-8 space-y-4">
-            
             <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-5">
               <div className="border-b border-slate-100 pb-3">
                 <h2 className="text-sm font-bold text-black uppercase tracking-wider">
@@ -323,7 +333,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 1. PRODUCTO (LOS 26 PRODUCTOS DEL EXCEL) */}
+              {/* 1. PRODUCTO (26 PRODUCTOS EXCEL) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   1. Producto a Cotizar
@@ -335,12 +345,10 @@ export default function App() {
                     setProductoSeleccionado(nuevoId);
                     const nuevoProd = CATALOGO_PRODUCTOS.find(p => p.id === nuevoId);
                     if (nuevoProd) {
-                      // autoajustar serie si no es compatible
                       let nuevaSerie = config.serie;
                       if (!nuevoProd.seriesCompatibles.includes(config.serie)) {
                         nuevaSerie = nuevoProd.seriesCompatibles[0] || 'ESPECIAL';
                       }
-                      // autoajustar cristal si no es compatible
                       let nuevoVidrio = config.vidrio;
                       if (!nuevoProd.cristalesCompatibles.includes(config.vidrio)) {
                         nuevoVidrio = nuevoProd.cristalesCompatibles[0] || 'ninguno';
@@ -363,7 +371,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* 2. LÍNEA / SERIE (FILTRADA SEGÚN EXCEL) */}
+              {/* 2. LÍNEA / SERIE */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   2. Línea / Serie
@@ -384,7 +392,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 3. TERMINACIÓN / COLOR (LOS 5 COLORES DEL EXCEL) */}
+              {/* 3. TERMINACIÓN / COLOR */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   3. Color / Terminación del Aluminio
@@ -417,7 +425,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 4. MEDIDA LIBRE (ANCHO X ALTO) - 100% FIEL A TALLER, SIN INVENTAR DATOS */}
+              {/* 4. MEDIDA LIBRE (ANCHO X ALTO) */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -460,7 +468,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 5. TIPO DE VIDRIO / CRISTAL (FILTRADO SEGÚN EXCEL) */}
+              {/* 5. TIPO DE VIDRIO / CRISTAL */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   5. Tipo de Vidrio / Cristal
@@ -481,7 +489,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 6. SERVICIO DE COLOCACIÓN EN OBRA (SWITCH TÁCTIL) */}
+              {/* 6. COLOCACIÓN EN OBRA */}
               <div className="space-y-2 pt-2 border-t border-slate-100">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   6. Servicio de Colocación en Obra
@@ -511,7 +519,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Switch iOS Táctil */}
                   <div className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 shrink-0 ${
                     config.conColocacion ? 'bg-orange-500' : 'bg-slate-300'
                   }`}>
@@ -537,10 +544,22 @@ export default function App() {
             </div>
           </div>
 
-          {/* COLUMNA DERECHA (DESKTOP): RESUMEN EJECUTIVO Y PRESUPUESTO EN VIVO */}
+          {/* COLUMNA DERECHA: PLANO TÉCNICO 2D Y RESUMEN */}
           <div className="md:col-span-5 lg:col-span-4 space-y-4">
             
-            {/* PANEL LATERAL DE RESUMEN (VISIBLE EN PANTALLAS GRANDES) */}
+            {/* 1. NOVEDAD: PLANO TÉCNICO 2D EN TIEMPO REAL */}
+            <WindowPreview2D
+              productoId={prodActual.id}
+              nombre={prodActual.nombre}
+              anchoStr={config.ancho}
+              altoStr={config.alto}
+              colorHex={COLORES[config.color]?.hex || '#475569'}
+              colorNombre={breakdown.colorNombre}
+              serieNombre={breakdown.serieNombre}
+              vidrioNombre={breakdown.vidrioNombre}
+            />
+
+            {/* 2. PANEL DE RESUMEN EJECUTIVO */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 md:sticky md:top-24">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -569,7 +588,7 @@ export default function App() {
                   <span className="font-semibold text-slate-900">{breakdown.medidaTexto}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Cristal:</span>
+                  <span className="text-slate-500">Vidrio:</span>
                   <span className="font-semibold text-slate-900">{breakdown.vidrioNombre}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
@@ -580,7 +599,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CAJA DE TOTAL / ESTADO */}
+              {/* CAJA DE ESTADO */}
               <div className="bg-neutral-900 text-white rounded-xl p-4 shadow-md">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">
                   Estado del Presupuesto
@@ -593,7 +612,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* BOTÓN FORMAL DESKTOP */}
+              {/* BOTONES ACCIÓN */}
               <button
                 type="button"
                 onClick={() => setMostrarModal(true)}
@@ -618,7 +637,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* FOOTER FLOTANTE SOLO EN MOBILE (OCULTO EN PANTALLAS MD/DESKTOP) */}
+      {/* FOOTER FLOTANTE MOBILE */}
       <footer className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 safe-bottom shadow-lg px-4 py-3 flex items-center justify-between gap-3">
         <div>
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 block">
@@ -649,7 +668,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* MODAL DEL PRESUPUESTO FORMAL MEMBRETADO */}
+      {/* MODAL DEL PRESUPUESTO FORMAL CON QR DINÁMICO */}
       {mostrarModal && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="w-full max-w-lg bg-white text-slate-900 rounded-t-3xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200 overflow-hidden">
@@ -679,7 +698,7 @@ export default function App() {
                 <img
                   src={DATOS_EMPRESA.logoLocal}
                   alt="CD Aluminio"
-                  className="w-28 h-28 mx-auto object-contain mb-2 drop-shadow-xl"
+                  className="w-24 h-24 mx-auto object-contain mb-2 drop-shadow-xl"
                 />
                 <div className="text-xs text-slate-700 font-bold uppercase tracking-wider">
                   {DATOS_EMPRESA.rubro}
@@ -748,6 +767,25 @@ export default function App() {
                 </span>
               </div>
 
+              {/* QR DINÁMICO PARA CONTACTO RÁPIDO WHATSAPP */}
+              {qrDataUrl && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center gap-3">
+                  <img
+                    src={qrDataUrl}
+                    alt="Código QR WhatsApp"
+                    className="w-20 h-20 rounded-lg border border-orange-200 bg-white p-1 shrink-0 shadow-xs"
+                  />
+                  <div className="text-[11px] leading-tight space-y-1">
+                    <strong className="text-slate-900 font-bold block text-xs">
+                      Escanear para confirmar por WhatsApp
+                    </strong>
+                    <p className="text-slate-600 text-[10px]">
+                      Apuntá la cámara de tu celular a este código QR para abrir el chat oficial de CD Aluminio con tu configuración lista para coordinar la seña.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* CONDICIONES */}
               <div className="text-[10px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1">
                 <p className="font-bold text-slate-800">• Forma de Pago: {DATOS_EMPRESA.condicionesPago}.</p>
@@ -757,7 +795,7 @@ export default function App() {
 
             </div>
 
-            {/* BOTONES ACCIÓN MULTI-FORMATO (WHATSAPP, PDF, IMAGEN, COPIAR) */}
+            {/* BOTONES ACCIÓN MULTI-FORMATO */}
             <div className="p-3.5 sm:p-4 border-t border-slate-200 bg-slate-50 grid grid-cols-2 gap-2">
               <button
                 type="button"

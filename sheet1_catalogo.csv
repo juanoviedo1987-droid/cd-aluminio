@@ -1,0 +1,24 @@
+ID Producto,Nombre del Producto / Abertura,Categoría,Series Compatibles (Excel),Cristales Compatibles,Precio Base Taller ($ UYU),Unidad de Cotización,Plazo Estimado (Días),Requiere Medición en Obra,Estado en App,Notas Técnicas de Taller
+V-CORR-2H,Ventana Corrediza (2 Hojas),Ventanas,"S20, S25, A82, Probba, Gala CR","4mm, 5mm, Policarbonatos",,Unidad,7 a 10 días,Recomendable,ACTIVO,Línea estándar tradicional más vendida
+V-CORR-3H,Ventana Corrediza (3 Hojas),Ventanas,"S25, A82, Probba, Gala CR","4mm a 8mm, DVH, Policarbonatos",,Unidad,10 a 12 días,Recomendable,ACTIVO,Guía de 3 vías reforzada
+V-CORR-4H,Ventana Corrediza (4 Hojas),Ventanas,"S25, A82, Probba, Gala CR","4mm a 8mm, DVH, Policarbonatos",,Unidad,10 a 14 días,Recomendable,ACTIVO,Cierre central y lateral
+V-PANO-FIJO,Paño Fijo,Ventanas,"S30, A82, Probba, Gala CR","4mm, 5mm, 6mm, DVH, Policarbonatos",,m²,7 a 10 días,Obligatoria,ACTIVO,Serie 30 reforzada
+V-BATIENTE,Ventana Batiente,Ventanas,S30,"4mm, 5mm, 6mm, DVH, Policarbonatos",,Unidad,10 a 12 días,Recomendable,ACTIVO,Hermética con burlete perimetral
+V-TABAQUERA,Ventana Tabaquera,Ventanas,S30,"4mm, 5mm, 6mm, 8mm, DVH, Policarbonatos",,Unidad,7 a 10 días,Recomendable,ACTIVO,Apertura superior basculante
+V-PROYECTANTE,Ventana Proyectante,Ventanas,"S30, Probba, Gala CR","4mm a 8mm, DVH, Policarbonatos",,Unidad,10 a 12 días,Recomendable,ACTIVO,Brazos de fricción de acero inox
+V-GUILLOTINA,Ventana Guillotina,Ventanas,"A82, Probba, Gala CR","4mm a 8mm, DVH, Policarbonatos",,Unidad,12 a 15 días,Obligatoria,ACTIVO,Sistema contrapesado vertical
+ESP-BAJO-BAT,Bajo Mesada (Batiente),Especiales,S30,"4mm, Policarbonatos",,Metro lineal,10 a 15 días,Obligatoria,ACTIVO,Mueble en aluminio con puertas batientes
+ESP-BAJO-CORR,Bajo Mesada (Corredizo),Especiales,S20,"4mm, Policarbonatos",,Metro lineal,10 a 15 días,Obligatoria,ACTIVO,Guías corredizas embutidas
+P-MITAD-VIDRIO,Puerta Mitad Aluminio y Mitad Cristal,Puertas,S30,"4mm, 5mm, 6mm, DVH, Policarbonatos",,Unidad,10 a 14 días,Obligatoria,ACTIVO,Puerta mixta residencial / taller
+P-CIEGA,Puerta Toda Ciega en Aluminio,Puertas,S30,Sin Cristal / No Aplica,,Unidad,10 a 14 días,Obligatoria,ACTIVO,Tubular machihembrado reforzado
+P-CRISTAL,Puerta en Cristal,Puertas,S30,"4mm, 5mm, 6mm, DVH, Policarbonatos",,Unidad,12 a 15 días,Obligatoria,ACTIVO,Herrajes pesados y manijón
+P-GRANERO,Puerta Estilo Granero (Interior),Puertas,S30,"4mm, 5mm, 6mm, DVH, Policarbonatos",,Unidad,12 a 15 días,Obligatoria,ACTIVO,Guía aérea suspendida de diseño negro
+SIS-MONO-PVC,Sistema Monoblock (Cortina PVC),Sistemas,"S20, S25, A82, Probba, Gala CR","4mm, 5mm, 6mm, DVH, Policarbonatos",,Unidad,10 a 14 días,Obligatoria,ACTIVO,Cajón compacto exterior/interior
+SIS-MONO-ALU,Sistema Monoblock (Cortina Aluminio),Sistemas,"S20, S25, A82, Probba, Gala CR","4mm, 5mm, 6mm, DVH, Policarbonatos",,Unidad,12 a 15 días,Obligatoria,ACTIVO,Lamas de aluminio rellenas con poliuretano
+MAMP-CRISTAL,Mampara de Cristal,Mamparas,"S30, Especial","4mm, 6mm, 8mm, Policarbonatos",,Unidad,10 a 12 días,Obligatoria,ACTIVO,Cristal templado para baño
+MAMP-ACRILICO,Mampara de Acrílico,Mamparas,"S20, Especial",Sin Cristal / No Aplica,,Unidad,7 a 10 días,Recomendable,ACTIVO,Placas de acrílico translúcido
+ESP-BARANDA,Baranda,Especiales,"S30, Especial","6mm, 8mm, Policarbonatos",,Metro lineal,12 a 18 días,Obligatoria,ACTIVO,Pasamanos tubular y cristal de seguridad
+SIS-ROLLERS,Cortina Rollers,Sistemas,Especial,Sin Cristal / No Aplica,,m²,7 a 10 días,Recomendable,ACTIVO,Blackout o Sunscreen con comando
+ESP-TECHO-FIJO,Techo Fijo,Especiales,"S30, Especial","Policarbonatos, 8mm",,m²,15 a 20 días,Obligatoria,ACTIVO,Estructura autoportante de aluminio
+ESP-TECHO-AUTO,Techo Automatizado,Especiales,"S30, Especial","Policarbonatos, 8mm",,m²,18 a 25 días,Obligatoria,ACTIVO,Apertura con motorización remota
+ESP-HERRERIA,Herrería de Diseño,Especiales,"S30, Especial",Opcional / A definir,,A convenir,A convenir,Obligatoria,ACTIVO,"Portones, rejas y cerramientos especiales"
