@@ -39,7 +39,7 @@ export default function App() {
   const [pinIngresado, setPinIngresado] = useState('');
   const [errorPin, setErrorPin] = useState(false);
 
-  const [productoSeleccionado, setProductoSeleccionado] = useState('ventana-corrediza');
+  const [productoSeleccionado, setProductoSeleccionado] = useState('ventana-corrediza-2h');
   const [config, setConfig] = useState<QuoteConfig>({
     medidaId: '1000x1200',
     serie: 'S25',
@@ -47,6 +47,9 @@ export default function App() {
     vidrio: 'simple',
     conColocacion: false,
   });
+
+  const prodActual = CATALOGO_PRODUCTOS.find(p => p.id === productoSeleccionado) || CATALOGO_PRODUCTOS[0];
+  const esCotizableAutomatica = prodActual.permiteCotizacionAutomatica;
 
   const [mostrarModal, setMostrarModal] = useState(false);
   const [copiado, setCopiado] = useState(false);
@@ -58,14 +61,14 @@ export default function App() {
   const breakdown = calcularPresupuesto(config);
 
   const handleCopiar = () => {
-    const textoDecodificado = decodeURIComponent(generarTextoWhatsApp(breakdown));
+    const textoDecodificado = decodeURIComponent(generarTextoWhatsApp(breakdown, prodActual.nombre, !esCotizableAutomatica));
     navigator.clipboard.writeText(textoDecodificado);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2500);
   };
 
   const handleWhatsApp = () => {
-    const texto = generarTextoWhatsApp(breakdown);
+    const texto = generarTextoWhatsApp(breakdown, prodActual.nombre, !esCotizableAutomatica);
     window.open(`https://wa.me/${DATOS_EMPRESA.whatsappNumero}?text=${texto}`, '_blank');
   };
 
@@ -313,42 +316,83 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 1. PRODUCTO */}
+              {/* 1. PRODUCTO (LOS 26 PRODUCTOS DEL EXCEL) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  1. Producto a Cotizar
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span>1. Producto a Cotizar</span>
+                  <span className="text-[11px] text-orange-600 font-semibold lowercase">
+                    {esCotizableAutomatica ? 'cotizador automático' : 'cotización a medida'}
+                  </span>
                 </label>
                 <select
                   value={productoSeleccionado}
-                  onChange={(e) => setProductoSeleccionado(e.target.value)}
-                  className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                  onChange={(e) => {
+                    const nuevoId = e.target.value;
+                    setProductoSeleccionado(nuevoId);
+                    const nuevoProd = CATALOGO_PRODUCTOS.find(p => p.id === nuevoId);
+                    if (nuevoProd && nuevoProd.seriesCompatibles.length > 0) {
+                      // autoajustar a la serie compatible
+                      if (!nuevoProd.seriesCompatibles.includes(config.serie)) {
+                        setConfig(prev => ({ ...prev, serie: nuevoProd.seriesCompatibles[0] }));
+                      }
+                    }
+                  }}
+                  className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition shadow-inner"
                 >
                   {CATALOGO_PRODUCTOS.map((p) => (
-                    <option key={p.id} value={p.id} disabled={!p.activo}>
-                      {p.nombre} {!p.activo ? '(Próximamente)' : ''}
+                    <option key={p.id} value={p.id}>
+                      {p.nombre} {!p.permiteCotizacionAutomatica ? '— (A convenir / A medida)' : ''}
                     </option>
                   ))}
                 </select>
+                {prodActual.nota && (
+                  <p className="text-[11px] text-slate-500 mt-1 italic flex items-center gap-1">
+                    <span>ℹ️</span> {prodActual.nota}
+                  </p>
+                )}
               </div>
 
-              {/* 2. LÍNEA / SERIE */}
+              {/* AVISO SI EL PRODUCTO ES A CONVENIR / CONSULTAR */}
+              {!esCotizableAutomatica && (
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-950 space-y-2 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">📋</span>
+                    <strong className="text-xs font-bold text-amber-900 uppercase tracking-wide">
+                      Producto Especial / A Convenir
+                    </strong>
+                  </div>
+                  <p className="text-xs text-amber-900 leading-relaxed">
+                    Este producto se fabrica 100% sobre diseño o medidas específicas en obra. Podés generar la consulta formal directa a taller por WhatsApp para presupuestar sin costo.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleWhatsApp}
+                    className="w-full min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Consultar {prodActual.nombre} por WhatsApp</span>
+                  </button>
+                </div>
+              )}
+
+              {/* 2. LÍNEA / SERIE (FILTRADA POR COMPATIBILIDAD DEL EXCEL) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  2. Línea / Serie de Perfilería
+                  2. Línea / Serie de Perfilería Compatible
                 </label>
                 <select
                   value={config.serie}
                   onChange={(e) => setConfig({ ...config, serie: e.target.value as SerieAluminio })}
                   className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                 >
-                  {(Object.keys(FACTORES_SERIE) as SerieAluminio[]).map((key) => (
+                  {prodActual.seriesCompatibles.map((key) => (
                     <option key={key} value={key}>
                       {FACTORES_SERIE[key].nombre}
                     </option>
                   ))}
                 </select>
                 <p className="text-[11px] text-slate-500 mt-1 italic">
-                  {FACTORES_SERIE[config.serie].desc}
+                  {FACTORES_SERIE[config.serie]?.desc}
                 </p>
               </div>
 
@@ -498,7 +542,7 @@ export default function App() {
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Producto:</span>
-                  <span className="font-semibold text-slate-900">Ventana Corrediza</span>
+                  <span className="font-semibold text-slate-900 text-right truncate max-w-[180px]">{prodActual.nombre}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Línea:</span>
@@ -527,14 +571,20 @@ export default function App() {
               {/* CAJA DE TOTAL */}
               <div className="bg-neutral-900 text-white rounded-xl p-4 shadow-md">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">
-                  Total Estimado ($ UYU)
+                  {esCotizableAutomatica ? 'Total Estimado ($ UYU)' : 'Estado de Cotización'}
                 </span>
-                <div className="text-3xl font-black text-orange-400 leading-none">
-                  {formatearMoneda(breakdown.totalFinal)}
-                  <span className="text-xs font-bold text-neutral-300 ml-1">UYU</span>
-                </div>
+                {esCotizableAutomatica ? (
+                  <div className="text-3xl font-black text-orange-400 leading-none">
+                    {formatearMoneda(breakdown.totalFinal)}
+                    <span className="text-xs font-bold text-neutral-300 ml-1">UYU</span>
+                  </div>
+                ) : (
+                  <div className="text-xl font-bold text-amber-400 leading-tight">
+                    A Convenir / A Medida
+                  </div>
+                )}
                 <p className="text-[10px] text-neutral-400 mt-2">
-                  Retiro sin costo en taller Gral. Flores 2979.
+                  {esCotizableAutomatica ? 'Retiro sin costo en taller Gral. Flores 2979.' : 'Cotización con foto y visita técnica a coordinar.'}
                 </p>
               </div>
 
@@ -567,21 +617,42 @@ export default function App() {
       <footer className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 safe-bottom shadow-lg px-4 py-3 flex items-center justify-between gap-3">
         <div>
           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 block">
-            Total Estimado
+            {esCotizableAutomatica ? 'Total Estimado' : 'Cotización'}
           </span>
-          <div className="text-2xl font-black text-black leading-none">
-            {formatearMoneda(breakdown.totalFinal)}
-            <span className="text-xs font-bold text-orange-600 ml-1">UYU</span>
-          </div>
+          {esCotizableAutomatica ? (
+            <div className="text-2xl font-black text-black leading-none">
+              {formatearMoneda(breakdown.totalFinal)}
+              <span className="text-xs font-bold text-orange-600 ml-1">UYU</span>
+            </div>
+          ) : (
+            <div className="text-sm font-bold text-amber-600 leading-tight">
+              A Convenir
+            </div>
+          )}
         </div>
 
         <button
           type="button"
-          onClick={() => setMostrarModal(true)}
+          onClick={() => {
+            if (esCotizableAutomatica) {
+              setMostrarModal(true);
+            } else {
+              handleWhatsApp();
+            }
+          }}
           className="min-h-[46px] px-4 py-2.5 bg-black hover:bg-neutral-800 text-white font-bold rounded-xl shadow-md flex items-center gap-2 transition active:scale-95 text-xs border border-neutral-700"
         >
-          <FileText className="w-4 h-4 text-orange-500" />
-          <span>Ver Presupuesto</span>
+          {esCotizableAutomatica ? (
+            <>
+              <FileText className="w-4 h-4 text-orange-500" />
+              <span>Ver Presupuesto</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 text-emerald-400" />
+              <span>Consultar por WhatsApp</span>
+            </>
+          )}
         </button>
       </footer>
 
@@ -649,7 +720,7 @@ export default function App() {
                 <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden bg-white">
                   <div className="p-2.5 flex justify-between">
                     <span className="text-slate-500">Abertura:</span>
-                    <span className="font-bold text-slate-900">Ventana Corrediza (2 Hojas)</span>
+                    <span className="font-bold text-slate-900">{prodActual.nombre}</span>
                   </div>
                   <div className="p-2.5 flex justify-between">
                     <span className="text-slate-500">Línea de Perfil:</span>
