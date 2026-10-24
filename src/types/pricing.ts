@@ -1,14 +1,12 @@
-export type SerieAluminio = 'S20' | 'S25' | 'S30';
-export type ColorAluminio = 'natural' | 'anolok';
-export type TipoVidrio = 'simple' | 'dvh';
+export type SerieAluminio = 'S20' | 'S25' | 'S30' | 'A82' | 'PROBBA' | 'GALA_CR';
+export type ColorAluminio = 'natural' | 'blanco' | 'negro' | 'anolok' | 'electrostatica';
+export type TipoVidrio = 'c4mm' | 'c5mm' | 'c6mm' | 'c8mm' | 'dvh' | 'polic_alveolar' | 'polic_compacto';
 
 export interface MedidaEstandar {
   id: string;
   ancho: number; // en mm
   alto: number;  // en mm
-  label: string; // ej: "1000 x 1000"
-  precioBaseNatural: number; // para Serie 25
-  precioBaseAnolok: number;  // para Serie 25
+  label: string; // ej: "1000 x 1000 mm (1.00 m Ancho x 1.00 m Alto)"
 }
 
 export interface QuoteConfig {
@@ -24,12 +22,9 @@ export interface QuoteBreakdown {
   serieNombre: string;
   colorNombre: string;
   vidrioNombre: string;
-  precioBaseS25: number;
-  adicionalSerie: number;
-  subtotalPerfileria: number;
-  adicionalVidrioDVH: number;
-  subtotalAbertura: number;
-  costoColocacion: number;
-  totalFinal: number;
+  conColocacion: boolean;
+  costoColocacionTexto: string;
+  precioTexto: string;
   vigenciaDias: number;
 }
+
