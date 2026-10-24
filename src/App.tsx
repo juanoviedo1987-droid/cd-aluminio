@@ -142,14 +142,14 @@ export default function App() {
         <div className="w-full max-w-sm bg-black border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
           
           {/* Logo Oficial Protagónico */}
-          <div className="space-y-1">
+          <div className="space-y-2">
             <img
               src={DATOS_EMPRESA.logoLocal}
               alt="CD Aluminio"
-              className="w-24 h-24 mx-auto object-contain drop-shadow-lg"
+              className="w-32 h-32 mx-auto object-contain drop-shadow-2xl"
             />
-            <p className="text-[11px] text-neutral-400 tracking-wider font-semibold uppercase pt-1">
-              Cotizador Interno &bull; Acceso Taller
+            <p className="text-xs text-neutral-300 tracking-wider font-bold uppercase pt-1">
+              Cotizador Oficial &bull; Acceso Taller
             </p>
           </div>
 
@@ -245,20 +245,25 @@ export default function App() {
     <div className="min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-orange-500 selection:text-white flex flex-col">
       
       {/* HEADER CORPORATIVO FULL-WIDTH CON CONTENIDO CENTRADO */}
-      <header className="bg-black text-white px-4 lg:px-8 py-3 sticky top-0 z-30 shadow-md border-b border-neutral-800">
+      <header className="bg-black text-white px-4 lg:px-8 py-3.5 sticky top-0 z-30 shadow-md border-b border-neutral-800">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          {/* Logo Oficial Protagónico */}
-          <div className="flex items-center gap-3">
-            <img
-              src={DATOS_EMPRESA.logoLocal}
-              alt="CD Aluminio"
-              className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-md hover:scale-105 transition-transform"
-            />
-            <div className="hidden sm:block">
-              <span className="text-[11px] text-neutral-400 tracking-wider font-semibold uppercase block">
-                Cotizador Oficial
+          {/* Logo Oficial Protagónico en Tamaño Impactante */}
+          <div className="flex items-center gap-3.5">
+            <div className="relative">
+              <img
+                src={DATOS_EMPRESA.logoLocal}
+                alt="CD Aluminio"
+                className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-xl hover:scale-105 transition-transform shrink-0"
+              />
+            </div>
+            <div>
+              <span className="text-xs md:text-sm text-white font-extrabold tracking-wider uppercase block leading-tight">
+                CD <span className="text-orange-500">ALUMINIO</span>
               </span>
-              <span className="text-[10px] text-neutral-500">
+              <span className="text-[11px] text-neutral-400 font-medium block">
+                Cotizador Oficial de Fábrica
+              </span>
+              <span className="hidden sm:block text-[10px] text-neutral-500">
                 Gral. Flores 2979 &bull; Montevideo
               </span>
             </div>
@@ -606,13 +611,13 @@ export default function App() {
             <div ref={modalHojaRef} className="p-6 overflow-y-auto space-y-4 text-xs bg-white">
               
               {/* LOGO Y DATOS EMPRESA */}
-              <div className="text-center pb-3 border-b border-slate-200">
+              <div className="text-center pb-4 border-b border-slate-200">
                 <img
                   src={DATOS_EMPRESA.logoLocal}
                   alt="CD Aluminio"
-                  className="w-20 h-20 mx-auto object-contain mb-2 drop-shadow-md"
+                  className="w-28 h-28 mx-auto object-contain mb-2 drop-shadow-xl"
                 />
-                <div className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">
+                <div className="text-xs text-slate-700 font-bold uppercase tracking-wider">
                   {DATOS_EMPRESA.rubro}
                 </div>
                 <div className="text-[11px] text-slate-500">
