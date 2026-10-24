@@ -250,7 +250,7 @@ export default function App() {
       {/* HEADER CORPORATIVO FULL-WIDTH CON CONTENIDO CENTRADO */}
       <header className="bg-black text-white px-4 lg:px-8 py-3.5 sticky top-0 z-30 shadow-md border-b border-neutral-800">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          {/* Logo Oficial Protagónico en Tamaño Impactante */}
+          {/* Logo Oficial y Título */}
           <div className="flex items-center gap-3.5">
             <div className="relative">
               <img
@@ -260,14 +260,11 @@ export default function App() {
               />
             </div>
             <div>
-              <span className="text-xs md:text-sm text-white font-extrabold tracking-wider uppercase block leading-tight">
-                CD <span className="text-orange-500">ALUMINIO</span>
+              <span className="text-base md:text-lg font-black tracking-tight uppercase block leading-tight">
+                <span className="text-white">C</span><span className="text-orange-500">D</span> <span className="text-white">ALUMINIO</span>
               </span>
-              <span className="text-[11px] text-neutral-400 font-medium block">
+              <span className="text-xs text-neutral-400 font-medium block">
                 Cotizador Oficial de Fábrica
-              </span>
-              <span className="hidden sm:block text-[10px] text-neutral-500">
-                Gral. Flores 2979 &bull; Montevideo
               </span>
             </div>
           </div>
