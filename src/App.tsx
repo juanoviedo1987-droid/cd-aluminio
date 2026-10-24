@@ -141,17 +141,14 @@ export default function App() {
       <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 selection:bg-orange-500 selection:text-white">
         <div className="w-full max-w-sm bg-black border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
           
-          {/* Logo y título */}
-          <div className="space-y-2">
+          {/* Logo Oficial Protagónico */}
+          <div className="space-y-1">
             <img
               src={DATOS_EMPRESA.logoLocal}
               alt="CD Aluminio"
-              className="w-16 h-16 mx-auto object-contain drop-shadow"
+              className="w-24 h-24 mx-auto object-contain drop-shadow-lg"
             />
-            <h1 className="text-xl tracking-tight leading-none text-white pt-2">
-              <span className="text-white font-black">C</span><span className="text-orange-500 font-black">D</span> <span className="text-white font-normal">Aluminio</span>
-            </h1>
-            <p className="text-[11px] text-neutral-400 tracking-wider font-medium uppercase">
+            <p className="text-[11px] text-neutral-400 tracking-wider font-semibold uppercase pt-1">
               Cotizador Interno &bull; Acceso Taller
             </p>
           </div>
@@ -250,19 +247,20 @@ export default function App() {
       {/* HEADER CORPORATIVO FULL-WIDTH CON CONTENIDO CENTRADO */}
       <header className="bg-black text-white px-4 lg:px-8 py-3 sticky top-0 z-30 shadow-md border-b border-neutral-800">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
+          {/* Logo Oficial Protagónico */}
           <div className="flex items-center gap-3">
             <img
               src={DATOS_EMPRESA.logoLocal}
               alt="CD Aluminio"
-              className="w-11 h-11 lg:w-12 lg:h-12 object-contain drop-shadow"
+              className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-md hover:scale-105 transition-transform"
             />
-            <div>
-              <h1 className="text-base lg:text-lg tracking-tight leading-none text-white">
-                <span className="text-white font-black">C</span><span className="text-orange-500 font-black">D</span> <span className="text-white font-normal">Aluminio</span>
-              </h1>
-              <p className="text-[10px] lg:text-xs text-slate-400 tracking-wider font-medium uppercase mt-0.5">
-                Carpintería en Aluminio &bull; Montevideo
-              </p>
+            <div className="hidden sm:block">
+              <span className="text-[11px] text-neutral-400 tracking-wider font-semibold uppercase block">
+                Cotizador Oficial
+              </span>
+              <span className="text-[10px] text-neutral-500">
+                Gral. Flores 2979 &bull; Montevideo
+              </span>
             </div>
           </div>
 
@@ -612,12 +610,9 @@ export default function App() {
                 <img
                   src={DATOS_EMPRESA.logoLocal}
                   alt="CD Aluminio"
-                  className="w-16 h-16 mx-auto object-contain mb-1 drop-shadow"
+                  className="w-20 h-20 mx-auto object-contain mb-2 drop-shadow-md"
                 />
-                <h3 className="text-base text-black tracking-tight">
-                  <span className="text-black font-black">C</span><span className="text-orange-600 font-black">D</span> <span className="text-black font-normal">Aluminio</span>
-                </h3>
-                <div className="text-[11px] text-slate-600 font-medium">
+                <div className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">
                   {DATOS_EMPRESA.rubro}
                 </div>
                 <div className="text-[11px] text-slate-500">
