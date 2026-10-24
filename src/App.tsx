@@ -23,12 +23,22 @@ import {
   Copy,
   X,
   ImageIcon,
-  FileDown
+  FileDown,
+  Lock,
+  KeyRound
 } from './components/Icons';
 
 const FECHA_EMISION_HOY = new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const PIN_ACCESO_CORRECTO = '2979';
 
 export default function App() {
+  // Estado de acceso seguro por PIN
+  const [estaAutenticado, setEstaAutenticado] = useState<boolean>(() => {
+    return localStorage.getItem('cd_aluminio_auth') === 'true';
+  });
+  const [pinIngresado, setPinIngresado] = useState('');
+  const [errorPin, setErrorPin] = useState(false);
+
   const [productoSeleccionado, setProductoSeleccionado] = useState('ventana-corrediza');
   const [config, setConfig] = useState<QuoteConfig>({
     medidaId: '1000x1200',
@@ -93,6 +103,147 @@ export default function App() {
     }
   };
 
+  const handleValidarPin = (pinAValidar: string) => {
+    if (pinAValidar === PIN_ACCESO_CORRECTO) {
+      setEstaAutenticado(true);
+      localStorage.setItem('cd_aluminio_auth', 'true');
+      setErrorPin(false);
+    } else {
+      setErrorPin(true);
+      setTimeout(() => setErrorPin(false), 2000);
+    }
+  };
+
+  const handleBotonTeclado = (digito: string) => {
+    if (pinIngresado.length < 4) {
+      const nuevoPin = pinIngresado + digito;
+      setPinIngresado(nuevoPin);
+      if (nuevoPin.length === 4) {
+        handleValidarPin(nuevoPin);
+      }
+    }
+  };
+
+  const handleBorrarPin = () => {
+    setPinIngresado(prev => prev.slice(0, -1));
+    setErrorPin(false);
+  };
+
+  const handleCerrarSesion = () => {
+    localStorage.removeItem('cd_aluminio_auth');
+    setEstaAutenticado(false);
+    setPinIngresado('');
+  };
+
+  // PANTALLA DE BLOQUEO CON PIN (ADAPTADA A CELULAR Y PC)
+  if (!estaAutenticado) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 selection:bg-orange-500 selection:text-white">
+        <div className="w-full max-w-sm bg-black border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+          
+          {/* Logo y título */}
+          <div className="space-y-2">
+            <img
+              src={DATOS_EMPRESA.logoLocal}
+              alt="CD Aluminio"
+              className="w-16 h-16 mx-auto object-contain drop-shadow"
+            />
+            <h1 className="text-xl tracking-tight leading-none text-white pt-2">
+              <span className="text-white font-black">C</span><span className="text-orange-500 font-black">D</span> <span className="text-white font-normal">Aluminio</span>
+            </h1>
+            <p className="text-[11px] text-neutral-400 tracking-wider font-medium uppercase">
+              Cotizador Interno &bull; Acceso Taller
+            </p>
+          </div>
+
+          {/* Indicador de PIN */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-400">
+              <Lock className="w-3.5 h-3.5 text-orange-500" />
+              <span>Ingrese PIN de acceso (4 dígitos)</span>
+            </div>
+
+            <div className="flex justify-center gap-3 py-2">
+              {[0, 1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className={`w-4 h-4 rounded-full border transition-all duration-200 ${
+                    pinIngresado.length > index
+                      ? 'bg-orange-500 border-orange-500 scale-110 shadow-sm shadow-orange-500/50'
+                      : 'border-neutral-700 bg-neutral-900'
+                  } ${errorPin ? 'border-red-500 bg-red-500/30 animate-pulse' : ''}`}
+                />
+              ))}
+            </div>
+
+            {errorPin && (
+              <p className="text-xs text-red-400 font-semibold animate-shake">
+                PIN incorrecto. Intente nuevamente.
+              </p>
+            )}
+
+            {/* Input para teclado físico en PC */}
+            <div className="pt-1">
+              <input
+                type="password"
+                maxLength={4}
+                value={pinIngresado}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setPinIngresado(val);
+                  if (val.length === 4) handleValidarPin(val);
+                }}
+                placeholder="Escribir con teclado..."
+                className="w-full text-center bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+          </div>
+
+          {/* Teclado numérico táctil para celular / tablets */}
+          <div className="grid grid-cols-3 gap-2.5 pt-2">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => handleBotonTeclado(num)}
+                className="min-h-[52px] bg-neutral-900 hover:bg-neutral-800 active:bg-neutral-700 border border-neutral-800/80 rounded-2xl text-lg font-bold text-white transition active:scale-95 shadow-sm"
+              >
+                {num}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={handleBorrarPin}
+              className="min-h-[52px] bg-neutral-900 hover:bg-neutral-800 active:bg-neutral-700 border border-neutral-800/80 rounded-2xl text-xs font-semibold text-neutral-400 transition active:scale-95"
+            >
+              Borrar
+            </button>
+            <button
+              type="button"
+              onClick={() => handleBotonTeclado('0')}
+              className="min-h-[52px] bg-neutral-900 hover:bg-neutral-800 active:bg-neutral-700 border border-neutral-800/80 rounded-2xl text-lg font-bold text-white transition active:scale-95 shadow-sm"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              onClick={() => handleValidarPin(pinIngresado)}
+              className="min-h-[52px] bg-orange-600 hover:bg-orange-500 active:bg-orange-700 rounded-2xl text-xs font-bold text-white transition active:scale-95 flex items-center justify-center gap-1 shadow-md shadow-orange-600/30"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>Entrar</span>
+            </button>
+          </div>
+
+          <div className="text-[10px] text-neutral-500 pt-2 border-t border-neutral-900">
+            Gral. Flores 2979 &bull; Montevideo
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-orange-500 selection:text-white flex flex-col">
       
@@ -106,8 +257,8 @@ export default function App() {
               className="w-11 h-11 lg:w-12 lg:h-12 object-contain drop-shadow"
             />
             <div>
-              <h1 className="text-base lg:text-lg font-black tracking-tight leading-none text-white">
-                <span className="text-white">C</span><span className="text-orange-500">D</span> <span className="text-white font-normal">Aluminio</span>
+              <h1 className="text-base lg:text-lg tracking-tight leading-none text-white">
+                <span className="text-white font-black">C</span><span className="text-orange-500 font-black">D</span> <span className="text-white font-normal">Aluminio</span>
               </h1>
               <p className="text-[10px] lg:text-xs text-slate-400 tracking-wider font-medium uppercase mt-0.5">
                 Carpintería en Aluminio &bull; Montevideo
@@ -115,7 +266,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="hidden md:flex items-center gap-1.5 text-xs text-neutral-300">
               <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
               Gral. Flores 2979, Montevideo
@@ -129,6 +280,15 @@ export default function App() {
               <Phone className="w-3.5 h-3.5" />
               <span>095 262 858</span>
             </a>
+            <button
+              type="button"
+              onClick={handleCerrarSesion}
+              title="Bloquear acceso"
+              className="flex items-center gap-1 text-[11px] bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white px-2.5 py-1.5 rounded-full border border-neutral-800 transition active:scale-95"
+            >
+              <Lock className="w-3 h-3 text-orange-500" />
+              <span className="hidden sm:inline">Bloquear</span>
+            </button>
           </div>
         </div>
       </header>
@@ -454,8 +614,8 @@ export default function App() {
                   alt="CD Aluminio"
                   className="w-16 h-16 mx-auto object-contain mb-1 drop-shadow"
                 />
-                <h3 className="font-black text-base text-black tracking-tight">
-                  <span className="text-black">C</span><span className="text-orange-600">D</span> <span className="text-black font-normal">Aluminio</span>
+                <h3 className="text-base text-black tracking-tight">
+                  <span className="text-black font-black">C</span><span className="text-orange-600 font-black">D</span> <span className="text-black font-normal">Aluminio</span>
                 </h3>
                 <div className="text-[11px] text-slate-600 font-medium">
                   {DATOS_EMPRESA.rubro}
