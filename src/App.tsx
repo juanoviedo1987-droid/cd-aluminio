@@ -3,7 +3,6 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import {
   CATALOGO_PRODUCTOS,
-  MEDIDAS_ESTANDAR,
   FACTORES_SERIE,
   COLORES,
   VIDRIOS,
@@ -40,7 +39,8 @@ export default function App() {
 
   const [productoSeleccionado, setProductoSeleccionado] = useState('ventana-corrediza-2h');
   const [config, setConfig] = useState<QuoteConfig>({
-    medidaId: '1000x1200',
+    ancho: '',
+    alto: '',
     serie: 'S25',
     color: 'natural',
     vidrio: 'c4mm',
@@ -76,7 +76,8 @@ export default function App() {
     try {
       const canvas = await html2canvas(modalHojaRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       const link = document.createElement('a');
-      link.download = `Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${breakdown.medida.ancho}x${breakdown.medida.alto}.png`;
+      const medNombre = config.ancho && config.alto ? `${config.ancho}x${config.alto}cm` : 'a_medida';
+      link.download = `Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${medNombre}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
@@ -95,8 +96,9 @@ export default function App() {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const medNombre = config.ancho && config.alto ? `${config.ancho}x${config.alto}cm` : 'a_medida';
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      pdf.save(`Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${breakdown.medida.ancho}x${breakdown.medida.alto}.pdf`);
+      pdf.save(`Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${medNombre}.pdf`);
     } catch (err) {
       console.error('Error generando PDF:', err);
     } finally {
@@ -304,7 +306,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* CONTENEDOR PRINCIPAL: MOBILE-FIRST (1 COLUMNA) Y DESKTOP (2 COLUMNAS EJECUTIVAS) */}
+      {/* CONTENEDOR PRINCIPAL */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 lg:p-8 pb-32 md:pb-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           
@@ -332,10 +334,18 @@ export default function App() {
                     const nuevoId = e.target.value;
                     setProductoSeleccionado(nuevoId);
                     const nuevoProd = CATALOGO_PRODUCTOS.find(p => p.id === nuevoId);
-                    if (nuevoProd && nuevoProd.seriesCompatibles.length > 0) {
+                    if (nuevoProd) {
+                      // autoajustar serie si no es compatible
+                      let nuevaSerie = config.serie;
                       if (!nuevoProd.seriesCompatibles.includes(config.serie)) {
-                        setConfig(prev => ({ ...prev, serie: nuevoProd.seriesCompatibles[0] }));
+                        nuevaSerie = nuevoProd.seriesCompatibles[0] || 'ESPECIAL';
                       }
+                      // autoajustar cristal si no es compatible
+                      let nuevoVidrio = config.vidrio;
+                      if (!nuevoProd.cristalesCompatibles.includes(config.vidrio)) {
+                        nuevoVidrio = nuevoProd.cristalesCompatibles[0] || 'ninguno';
+                      }
+                      setConfig(prev => ({ ...prev, serie: nuevaSerie, vidrio: nuevoVidrio }));
                     }
                   }}
                   className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition shadow-inner"
@@ -353,7 +363,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* 2. LÍNEA / SERIE (FILTRADA POR COMPATIBILIDAD DEL EXCEL) */}
+              {/* 2. LÍNEA / SERIE (FILTRADA SEGÚN EXCEL) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   2. Línea / Serie
@@ -407,28 +417,50 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 4. MEDIDA ESTÁNDAR (SIN PRECIOS HARDCODEADOS) */}
+              {/* 4. MEDIDA LIBRE (ANCHO X ALTO) - 100% FIEL A TALLER, SIN INVENTAR DATOS */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    4. Medida Estándar (Ancho x Alto)
+                    4. Medidas Estimadas (Ancho x Alto)
                   </label>
-                  <span className="text-[11px] text-slate-500 font-medium">mm</span>
+                  <span className="text-[11px] text-slate-500 font-medium">Opcional en cm</span>
                 </div>
-                <select
-                  value={config.medidaId}
-                  onChange={(e) => setConfig({ ...config, medidaId: e.target.value })}
-                  className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                >
-                  {MEDIDAS_ESTANDAR.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Ancho (cm):
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={config.ancho}
+                      onChange={(e) => setConfig({ ...config, ancho: e.target.value })}
+                      placeholder="Ej: 120"
+                      className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Alto (cm):
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={config.alto}
+                      onChange={(e) => setConfig({ ...config, alto: e.target.value })}
+                      placeholder="Ej: 100"
+                      className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1 italic">
+                  {config.ancho && config.alto
+                    ? `Medida configurada: ${config.ancho} cm Ancho x ${config.alto} cm Alto`
+                    : 'Si aún no tenés las medidas exactas, podés dejar los campos vacíos y se coordina la rectificación en obra.'}
+                </p>
               </div>
 
-              {/* 5. TIPO DE VIDRIO / CRISTAL (LOS 7 DEL EXCEL) */}
+              {/* 5. TIPO DE VIDRIO / CRISTAL (FILTRADO SEGÚN EXCEL) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   5. Tipo de Vidrio / Cristal
@@ -438,7 +470,7 @@ export default function App() {
                   onChange={(e) => setConfig({ ...config, vidrio: e.target.value as TipoVidrio })}
                   className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                 >
-                  {(Object.keys(VIDRIOS) as TipoVidrio[]).map((key) => (
+                  {prodActual.cristalesCompatibles.map((key) => (
                     <option key={key} value={key}>
                       {VIDRIOS[key].nombre}
                     </option>
@@ -449,7 +481,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 6. SERVICIO DE COLOCACIÓN EN OBRA (SWITCH TÁCTIL ESTILO IOS) */}
+              {/* 6. SERVICIO DE COLOCACIÓN EN OBRA (SWITCH TÁCTIL) */}
               <div className="space-y-2 pt-2 border-t border-slate-100">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   6. Servicio de Colocación en Obra
@@ -491,7 +523,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Banner de Foto de Sustitución si hay Colocación */}
                 {config.conColocacion && (
                   <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 flex items-start gap-2.5 text-amber-950 shadow-xs animate-in fade-in duration-200">
                     <span className="text-xl leading-none shrink-0">📸</span>
@@ -535,10 +566,10 @@ export default function App() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Medida:</span>
-                  <span className="font-semibold text-slate-900">{breakdown.medida.ancho} x {breakdown.medida.alto} mm</span>
+                  <span className="font-semibold text-slate-900">{breakdown.medidaTexto}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Vidrio:</span>
+                  <span className="text-slate-500">Cristal:</span>
                   <span className="font-semibold text-slate-900">{breakdown.vidrioNombre}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
@@ -618,7 +649,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* MODAL DEL PRESUPUESTO FORMAL MEMBRETADO (RESPONSIVE EN MÓVIL Y PC) */}
+      {/* MODAL DEL PRESUPUESTO FORMAL MEMBRETADO */}
       {mostrarModal && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="w-full max-w-lg bg-white text-slate-900 rounded-t-3xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200 overflow-hidden">
@@ -694,7 +725,7 @@ export default function App() {
                   </div>
                   <div className="p-2.5 flex justify-between">
                     <span className="text-slate-500">Dimensiones:</span>
-                    <span className="font-bold text-slate-900">{breakdown.medida.ancho} x {breakdown.medida.alto} mm</span>
+                    <span className="font-bold text-slate-900">{breakdown.medidaTexto}</span>
                   </div>
                   <div className="p-2.5 flex justify-between">
                     <span className="text-slate-500">Cristal:</span>
