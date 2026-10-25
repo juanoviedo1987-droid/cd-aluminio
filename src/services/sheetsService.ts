@@ -39,10 +39,17 @@ export const MAPA_ID_EXCEL_A_APP: Record<string, string> = {
   'ESP-HERRERIA': 'herreria-diseno',
 };
 
-// Función robusta para parsear líneas de CSV respetando comillas
+// Función robusta para parsear líneas de CSV respetando comillas y detectando delimitador (, o ;)
 function parsearCSVLineas(textoCSV: string): string[][] {
   const lineas: string[][] = [];
   const filas = textoCSV.split(/\r?\n/);
+  if (filas.length === 0) return lineas;
+
+  // Detectar delimitador según la cabecera (, o ;)
+  const primeraFila = filas[0] || '';
+  const cantComas = (primeraFila.match(/,/g) || []).length;
+  const cantPuntosComa = (primeraFila.match(/;/g) || []).length;
+  const separador = cantPuntosComa > cantComas ? ';' : ',';
 
   for (const fila of filas) {
     if (!fila.trim()) continue;
@@ -59,7 +66,7 @@ function parsearCSVLineas(textoCSV: string): string[][] {
         } else {
           dentroDeComillas = !dentroDeComillas;
         }
-      } else if (char === ',' && !dentroDeComillas) {
+      } else if (char === separador && !dentroDeComillas) {
         columnas.push(valorActual.trim());
         valorActual = '';
       } else {
