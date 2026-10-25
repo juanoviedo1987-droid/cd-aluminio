@@ -232,7 +232,7 @@ export const DATOS_EMPRESA = {
   condicionesPago: '50% seña para reserva de perfiles, 50% saldo contra entrega en taller',
 };
 
-export function calcularPresupuesto(config: QuoteConfig): QuoteBreakdown {
+export function calcularPresupuesto(config: QuoteConfig, precioBaseTaller?: number | null, precioTextoPersonalizado?: string): QuoteBreakdown {
   const infoSerie = FACTORES_SERIE[config.serie] || FACTORES_SERIE['S25'];
   const infoColor = COLORES[config.color] || COLORES['natural'];
   const infoVidrio = VIDRIOS[config.vidrio] || VIDRIOS['c4mm'];
@@ -249,6 +249,11 @@ export function calcularPresupuesto(config: QuoteConfig): QuoteBreakdown {
     medidaTexto = `${config.alto.trim()} cm Alto (Ancho a definir)`;
   }
 
+  let precioCalculadoTexto = precioTextoPersonalizado || 'A Convenir / Consultar';
+  if (precioBaseTaller && precioBaseTaller > 0) {
+    precioCalculadoTexto = `$ ${precioBaseTaller.toLocaleString('es-UY')} UYU`;
+  }
+
   return {
     medidaTexto,
     ancho: config.ancho,
@@ -258,7 +263,7 @@ export function calcularPresupuesto(config: QuoteConfig): QuoteBreakdown {
     vidrioNombre: infoVidrio.nombre,
     conColocacion: config.conColocacion,
     costoColocacionTexto: config.conColocacion ? 'A coordinar en obra (Montevideo)' : 'Retiro en taller (Sin costo)',
-    precioTexto: 'A Convenir / Consultar',
+    precioTexto: precioCalculadoTexto,
     vigenciaDias: DATOS_EMPRESA.vigenciaDias,
   };
 }

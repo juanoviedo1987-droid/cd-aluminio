@@ -11,6 +11,8 @@ import {
   calcularPresupuesto,
   generarTextoWhatsApp,
 } from './data/pricingData';
+import { sincronizarPreciosGoogleSheets } from './services/sheetsService';
+import type { PreciosEnVivo } from './services/sheetsService';
 import type { QuoteConfig, SerieAluminio, ColorAluminio, TipoVidrio } from './types/pricing';
 import {
   Phone,
@@ -38,6 +40,28 @@ export default function App() {
   const [pinIngresado, setPinIngresado] = useState('');
   const [errorPin, setErrorPin] = useState(false);
 
+  // Sincronización en tiempo real con Google Sheets
+  const [preciosEnVivo, setPreciosEnVivo] = useState<PreciosEnVivo>({});
+  const [sincronizandoSheets, setSincronizandoSheets] = useState(false);
+  const [ultimaSincronizacion, setUltimaSincronizacion] = useState<Date | null>(null);
+
+  useEffect(() => {
+    let montado = true;
+    async function cargarPrecios() {
+      setSincronizandoSheets(true);
+      const datos = await sincronizarPreciosGoogleSheets();
+      if (montado) {
+        setPreciosEnVivo(datos);
+        setSincronizandoSheets(false);
+        setUltimaSincronizacion(new Date());
+      }
+    }
+    cargarPrecios();
+    return () => {
+      montado = false;
+    };
+  }, []);
+
   const [productoSeleccionado, setProductoSeleccionado] = useState('ventana-corrediza-2h');
   const [config, setConfig] = useState<QuoteConfig>({
     ancho: '',
@@ -49,6 +73,7 @@ export default function App() {
   });
 
   const prodActual = CATALOGO_PRODUCTOS.find(p => p.id === productoSeleccionado) || CATALOGO_PRODUCTOS[0];
+  const infoEnVivoProd = preciosEnVivo[prodActual.id];
 
   const [mostrarModal, setMostrarModal] = useState(false);
   const [copiado, setCopiado] = useState(false);
@@ -58,7 +83,11 @@ export default function App() {
 
   const modalHojaRef = useRef<HTMLDivElement>(null);
 
-  const breakdown = calcularPresupuesto(config);
+  const breakdown = calcularPresupuesto(
+    config,
+    infoEnVivoProd?.precioBase,
+    infoEnVivoProd?.precioTexto
+  );
 
   // Generar QR dinámico para WhatsApp con el presupuesto configurado
   useEffect(() => {
@@ -334,9 +363,20 @@ export default function App() {
 
               {/* 1. PRODUCTO (26 PRODUCTOS EXCEL) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  1. Producto a Cotizar
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    1. Producto a Cotizar
+                  </label>
+                  {sincronizandoSheets ? (
+                    <span className="text-[10px] text-orange-600 font-semibold flex items-center gap-1 animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-orange-500"></span> Conectando catálogo...
+                    </span>
+                  ) : ultimaSincronizacion ? (
+                    <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Conectado a Hoja Drive
+                    </span>
+                  ) : null}
+                </div>
                 <select
                   value={productoSeleccionado}
                   onChange={(e) => {
@@ -357,15 +397,29 @@ export default function App() {
                   }}
                   className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition shadow-inner"
                 >
-                  {CATALOGO_PRODUCTOS.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre}
-                    </option>
-                  ))}
+                  {CATALOGO_PRODUCTOS
+                    .filter(p => {
+                      const vivo = preciosEnVivo[p.id];
+                      return vivo ? vivo.activo : true;
+                    })
+                    .map((p) => {
+                      const vivo = preciosEnVivo[p.id];
+                      const etiquetaPrecio = vivo && vivo.precioBase ? ` ($ ${vivo.precioBase.toLocaleString('es-UY')})` : '';
+                      return (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre}{etiquetaPrecio}
+                        </option>
+                      );
+                    })}
                 </select>
                 {prodActual.nota && (
                   <p className="text-[11px] text-slate-500 mt-1 italic flex items-center gap-1">
                     <span>ℹ️</span> {prodActual.nota}
+                  </p>
+                )}
+                {infoEnVivoProd?.notas && (
+                  <p className="text-[11px] text-orange-700 mt-1 italic flex items-center gap-1 bg-orange-50/70 p-1.5 rounded-lg border border-orange-200">
+                    <span>📌</span> {infoEnVivoProd.notas}
                   </p>
                 )}
               </div>
