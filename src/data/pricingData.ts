@@ -251,7 +251,11 @@ export function calcularPresupuesto(config: QuoteConfig, precioBaseTaller?: numb
 
   let precioCalculadoTexto = precioTextoPersonalizado || 'A Convenir / Consultar';
   if (precioBaseTaller && precioBaseTaller > 0) {
-    precioCalculadoTexto = `$ ${precioBaseTaller.toLocaleString('es-UY')} UYU`;
+    if (tieneAncho || tieneAlto) {
+      precioCalculadoTexto = `Desde $ ${precioBaseTaller.toLocaleString('es-UY')} UYU (Ref.)`;
+    } else {
+      precioCalculadoTexto = `$ ${precioBaseTaller.toLocaleString('es-UY')} UYU (Base)`;
+    }
   }
 
   return {
@@ -281,9 +285,10 @@ export function generarTextoWhatsApp(breakdown: QuoteBreakdown, productoNombre?:
     `*Medidas:* ${breakdown.medidaTexto}`,
     `*Cristal:* ${breakdown.vidrioNombre}`,
     `*Instalación:* ${breakdown.conColocacion ? 'Con colocación en obra' : 'Retiro en taller'}`,
-    `*Estado de Precio:* ${breakdown.precioTexto}`,
+    `*Estimación:* ${breakdown.precioTexto}`,
     `----------------------------------------`,
-    `Hola CD Aluminio, les envío esta configuración para coordinar presupuesto formal y cotización. Aguardo su respuesta.`
+    `_Nota: Presupuesto referencial sujeto a validación técnica de escuadría y vano en obra._`,
+    `Hola CD Aluminio, les envío esta configuración para coordinar rectificación y presupuesto formal. Aguardo su respuesta.`
   ];
 
   return encodeURIComponent(lineasConsulta.join('\n'));

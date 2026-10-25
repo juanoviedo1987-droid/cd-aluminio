@@ -82,7 +82,8 @@ function parsearCSVLineas(textoCSV: string): string[][] {
 
 export async function sincronizarPreciosGoogleSheets(): Promise<PreciosEnVivo> {
   try {
-    const res = await fetch(GOOGLE_SHEET_CSV_URL, {
+    const urlConCacheBuster = `${GOOGLE_SHEET_CSV_URL}&_t=${Date.now()}`;
+    const res = await fetch(urlConCacheBuster, {
       cache: 'no-cache',
     });
 

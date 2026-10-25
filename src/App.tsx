@@ -643,13 +643,13 @@ export default function App() {
               {/* CAJA DE ESTADO */}
               <div className="bg-neutral-900 text-white rounded-xl p-4 shadow-md">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">
-                  Estado del Presupuesto
+                  Estado de la Estimación
                 </span>
                 <div className="text-xl font-black text-orange-400 leading-tight">
                   {breakdown.precioTexto}
                 </div>
                 <p className="text-[10px] text-neutral-400 mt-2">
-                  Cotización personalizada por taller o WhatsApp según especificaciones.
+                  Presupuesto referencial sujeto a validación técnica de escuadría y vano en obra.
                 </p>
               </div>
 
@@ -802,8 +802,11 @@ export default function App() {
 
               {/* TOTAL */}
               <div className="bg-neutral-900 text-white p-3.5 rounded-xl flex items-center justify-between shadow-sm">
-                <span className="font-bold text-sm tracking-wide">ESTADO PRESUPUESTO:</span>
-                <span className="text-base font-black text-orange-400">
+                <div>
+                  <span className="font-bold text-xs tracking-wide block">ESTADO ESTIMACIÓN:</span>
+                  <span className="text-[9px] text-neutral-400 block">Sujeto a validación técnica en obra</span>
+                </div>
+                <span className="text-sm sm:text-base font-black text-orange-400 text-right">
                   {breakdown.precioTexto}
                 </span>
               </div>
@@ -829,9 +832,10 @@ export default function App() {
 
               {/* CONDICIONES */}
               <div className="text-[10px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1">
+                <p className="font-bold text-slate-800">• Presupuesto referencial sujeto a validación técnica de escuadría y vano en obra.</p>
                 <p className="font-bold text-slate-800">• Forma de Pago: {DATOS_EMPRESA.condicionesPago}.</p>
                 <p>• {breakdown.conColocacion ? 'Colocación en obra sujeta a validación técnica previa con foto del vano.' : 'Retiro en taller en Gral. Flores 2979, Montevideo.'}</p>
-                <p>• Validez de la cotización: {breakdown.vigenciaDias} días corridos.</p>
+                <p>• Validez de la estimación: {breakdown.vigenciaDias} días corridos.</p>
               </div>
 
             </div>
