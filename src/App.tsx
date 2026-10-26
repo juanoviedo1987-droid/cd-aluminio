@@ -206,9 +206,14 @@ export default function App() {
               <h1 className="text-xl font-black tracking-tight text-white uppercase">
                 <span className="text-white">C</span><span className="text-orange-500">D</span> <span className="text-white">ALUMINIO</span>
               </h1>
-              <p className="text-xs text-neutral-400 font-medium">
-                Acceso exclusivo para taller y ventas
-              </p>
+              <div className="flex items-center justify-center gap-2 mt-1">
+                <span className="text-xs text-neutral-400 font-medium">
+                  Cotizador Oficial de Fábrica
+                </span>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2 py-0.5 rounded-full">
+                  Versión Beta
+                </span>
+              </div>
             </div>
           </div>
 
@@ -318,9 +323,14 @@ export default function App() {
               />
             </div>
             <div>
-              <span className="text-base md:text-lg font-black tracking-tight uppercase block leading-tight">
-                <span className="text-white">C</span><span className="text-orange-500">D</span> <span className="text-white">ALUMINIO</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-base md:text-lg font-black tracking-tight uppercase block leading-tight">
+                  <span className="text-white">C</span><span className="text-orange-500">D</span> <span className="text-white">ALUMINIO</span>
+                </span>
+                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2 py-0.5 rounded-full">
+                  Beta
+                </span>
+              </div>
               <span className="text-xs text-neutral-400 font-medium block">
                 Cotizador Oficial de Fábrica
               </span>
