@@ -170,11 +170,7 @@ export default function App() {
 
   const handleBotonTeclado = (digito: string) => {
     if (pinIngresado.length < 4) {
-      const nuevoPin = pinIngresado + digito;
-      setPinIngresado(nuevoPin);
-      if (nuevoPin.length === 4) {
-        handleValidarPin(nuevoPin);
-      }
+      setPinIngresado(prev => prev + digito);
     }
   };
 
@@ -246,8 +242,11 @@ export default function App() {
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '').slice(0, 4);
                 setPinIngresado(val);
-                if (val.length === 4) {
-                  handleValidarPin(val);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleValidarPin(pinIngresado);
                 }
               }}
               placeholder="••••"
