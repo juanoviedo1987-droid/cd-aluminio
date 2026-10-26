@@ -12,7 +12,8 @@ import {
   generarTextoWhatsApp,
 } from './data/pricingData';
 import type { ProductoCatalogo } from './data/pricingData';
-import { cargarCatalogoDesdeGoogleSheets } from './services/sheetsService';
+import { cargarCatalogoDesdeGoogleSheets, cargarFactoresDesdeGoogleSheets } from './services/sheetsService';
+import type { FactoresTaller } from './services/sheetsService';
 import type { QuoteConfig, SerieAluminio, ColorAluminio, TipoVidrio } from './types/pricing';
 import {
   Phone,
@@ -40,8 +41,9 @@ export default function App() {
   const [pinIngresado, setPinIngresado] = useState('');
   const [errorPin, setErrorPin] = useState(false);
 
-  // Catálogo dinámico 100% alimentado desde Google Sheets
+  // Catálogo y Factores dinámicos 100% alimentados desde Google Sheets
   const [catalogo, setCatalogo] = useState<ProductoCatalogo[]>([PRODUCTO_EJEMPLO_TEST]);
+  const [factoresTaller, setFactoresTaller] = useState<FactoresTaller | null>(null);
   const [sincronizandoSheets, setSincronizandoSheets] = useState(false);
   const [ultimaSincronizacion, setUltimaSincronizacion] = useState<Date | null>(null);
 
@@ -49,12 +51,16 @@ export default function App() {
     let montado = true;
     async function cargar() {
       setSincronizandoSheets(true);
-      const listaProds = await cargarCatalogoDesdeGoogleSheets();
+      const [listaProds, factores] = await Promise.all([
+        cargarCatalogoDesdeGoogleSheets(),
+        cargarFactoresDesdeGoogleSheets(),
+      ]);
+
       if (montado && listaProds.length > 0) {
         setCatalogo(listaProds);
+        setFactoresTaller(factores);
         setSincronizandoSheets(false);
         setUltimaSincronizacion(new Date());
-        // Si el producto actual no está en la nueva lista, seleccionar el primero
         setProductoSeleccionado(prev => {
           const existe = listaProds.some(p => p.id === prev);
           return existe ? prev : listaProds[0].id;
@@ -89,8 +95,8 @@ export default function App() {
 
   const breakdown = calcularPresupuesto(
     config,
-    prodActual?.precioBase,
-    prodActual?.precioTexto
+    prodActual,
+    factoresTaller?.recargosSerie
   );
 
   // Generar QR dinámico para WhatsApp con el presupuesto configurado

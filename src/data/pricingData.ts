@@ -4,6 +4,7 @@ export interface ProductoCatalogo {
   id: string;
   nombre: string;
   categoria: string;
+  esPorM2?: boolean;
   precioBase: number | null;
   precioTexto: string;
   activo: boolean;
@@ -68,15 +69,17 @@ export const DATOS_EMPRESA = {
 
 export function calcularPresupuesto(
   config: QuoteConfig,
-  precioBaseTaller?: number | null,
-  precioTextoPersonalizado?: string
+  prodActual?: ProductoCatalogo | null,
+  factores?: Record<string, number>
 ): QuoteBreakdown {
   const infoSerie = FACTORES_SERIE[config.serie] || FACTORES_SERIE['S25'];
   const infoColor = COLORES[config.color] || COLORES['natural'];
   const infoVidrio = VIDRIOS[config.vidrio] || VIDRIOS['c4mm'];
 
-  const tieneAncho = config.ancho && config.ancho.trim() !== '';
-  const tieneAlto = config.alto && config.alto.trim() !== '';
+  const anchoNum = parseFloat(config.ancho);
+  const altoNum = parseFloat(config.alto);
+  const tieneAncho = !isNaN(anchoNum) && anchoNum > 0;
+  const tieneAlto = !isNaN(altoNum) && altoNum > 0;
 
   let medidaTexto = 'A convenir / A coordinar en obra';
   if (tieneAncho && tieneAlto) {
@@ -87,12 +90,38 @@ export function calcularPresupuesto(
     medidaTexto = `${config.alto.trim()} cm Alto (Ancho a definir)`;
   }
 
-  let precioCalculadoTexto = precioTextoPersonalizado || 'A Convenir / Consultar';
-  if (precioBaseTaller && precioBaseTaller > 0) {
+  // Regla de colocación del Word de CD Aluminio:
+  // "Las mamparas de cristal y las de acrílico son los ÚNICOS productos que tienen incluida su colocación dentro de Montevideo."
+  const esMampara = prodActual?.categoria?.toLowerCase().includes('mampara') || prodActual?.nombre?.toLowerCase().includes('mampara');
+  let costoColocacionTexto = 'Retiro en taller (Gral. Flores 2979)';
+  if (esMampara) {
+    costoColocacionTexto = 'Colocación incluida en Montevideo (Taller)';
+  } else if (config.conColocacion) {
+    costoColocacionTexto = 'A coordinar en obra en Montevideo';
+  }
+
+  let precioCalculadoTexto = prodActual?.precioTexto || 'A Convenir / Consultar';
+  const precioBase = prodActual?.precioBase;
+
+  if (precioBase && precioBase > 0) {
+    let subtotal = precioBase;
+
+    // Si es por m² y tenemos ambas medidas:
+    if (prodActual?.esPorM2 && tieneAncho && tieneAlto) {
+      const m2 = (anchoNum / 100) * (altoNum / 100);
+      subtotal = Math.round(m2 * precioBase);
+    }
+
+    // Aplicar recargo de Serie (según la pestaña 2 del Sheet)
+    const factorSerie = factores && factores[config.serie] !== undefined ? factores[config.serie] : 0;
+    if (factorSerie > 0) {
+      subtotal = Math.round(subtotal * (1 + factorSerie));
+    }
+
     if (tieneAncho || tieneAlto) {
-      precioCalculadoTexto = `Desde $ ${precioBaseTaller.toLocaleString('es-UY')} UYU (Ref.)`;
+      precioCalculadoTexto = `Desde $ ${subtotal.toLocaleString('es-UY')} UYU (Ref.)`;
     } else {
-      precioCalculadoTexto = `$ ${precioBaseTaller.toLocaleString('es-UY')} UYU (Base)`;
+      precioCalculadoTexto = `$ ${subtotal.toLocaleString('es-UY')} UYU (Base)`;
     }
   }
 
@@ -103,8 +132,8 @@ export function calcularPresupuesto(
     serieNombre: infoSerie.nombre,
     colorNombre: infoColor.nombre,
     vidrioNombre: infoVidrio.nombre,
-    conColocacion: config.conColocacion,
-    costoColocacionTexto: config.conColocacion ? 'A coordinar en obra (Montevideo)' : 'Retiro en taller (Sin costo)',
+    conColocacion: esMampara ? true : config.conColocacion,
+    costoColocacionTexto,
     precioTexto: precioCalculadoTexto,
     vigenciaDias: DATOS_EMPRESA.vigenciaDias,
   };
