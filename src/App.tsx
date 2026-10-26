@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import {
-  CATALOGO_PRODUCTOS,
+  PRODUCTO_EJEMPLO_TEST,
   FACTORES_SERIE,
   COLORES,
   VIDRIOS,
@@ -11,8 +11,8 @@ import {
   calcularPresupuesto,
   generarTextoWhatsApp,
 } from './data/pricingData';
-import { sincronizarPreciosGoogleSheets } from './services/sheetsService';
-import type { PreciosEnVivo } from './services/sheetsService';
+import type { ProductoCatalogo } from './data/pricingData';
+import { cargarCatalogoDesdeGoogleSheets } from './services/sheetsService';
 import type { QuoteConfig, SerieAluminio, ColorAluminio, TipoVidrio } from './types/pricing';
 import {
   Phone,
@@ -40,29 +40,34 @@ export default function App() {
   const [pinIngresado, setPinIngresado] = useState('');
   const [errorPin, setErrorPin] = useState(false);
 
-  // Sincronización en tiempo real con Google Sheets
-  const [preciosEnVivo, setPreciosEnVivo] = useState<PreciosEnVivo>({});
+  // Catálogo dinámico 100% alimentado desde Google Sheets
+  const [catalogo, setCatalogo] = useState<ProductoCatalogo[]>([PRODUCTO_EJEMPLO_TEST]);
   const [sincronizandoSheets, setSincronizandoSheets] = useState(false);
   const [ultimaSincronizacion, setUltimaSincronizacion] = useState<Date | null>(null);
 
   useEffect(() => {
     let montado = true;
-    async function cargarPrecios() {
+    async function cargar() {
       setSincronizandoSheets(true);
-      const datos = await sincronizarPreciosGoogleSheets();
-      if (montado) {
-        setPreciosEnVivo(datos);
+      const listaProds = await cargarCatalogoDesdeGoogleSheets();
+      if (montado && listaProds.length > 0) {
+        setCatalogo(listaProds);
         setSincronizandoSheets(false);
         setUltimaSincronizacion(new Date());
+        // Si el producto actual no está en la nueva lista, seleccionar el primero
+        setProductoSeleccionado(prev => {
+          const existe = listaProds.some(p => p.id === prev);
+          return existe ? prev : listaProds[0].id;
+        });
       }
     }
-    cargarPrecios();
+    cargar();
     return () => {
       montado = false;
     };
   }, []);
 
-  const [productoSeleccionado, setProductoSeleccionado] = useState('ventana-corrediza-2h');
+  const [productoSeleccionado, setProductoSeleccionado] = useState('prod-ejemplo-test');
   const [config, setConfig] = useState<QuoteConfig>({
     ancho: '',
     alto: '',
@@ -72,8 +77,7 @@ export default function App() {
     conColocacion: false,
   });
 
-  const prodActual = CATALOGO_PRODUCTOS.find(p => p.id === productoSeleccionado) || CATALOGO_PRODUCTOS[0];
-  const infoEnVivoProd = preciosEnVivo[prodActual.id];
+  const prodActual = catalogo.find(p => p.id === productoSeleccionado) || catalogo[0] || PRODUCTO_EJEMPLO_TEST;
 
   const [mostrarModal, setMostrarModal] = useState(false);
   const [copiado, setCopiado] = useState(false);
@@ -85,8 +89,8 @@ export default function App() {
 
   const breakdown = calcularPresupuesto(
     config,
-    infoEnVivoProd?.precioBase,
-    infoEnVivoProd?.precioTexto
+    prodActual?.precioBase,
+    prodActual?.precioTexto
   );
 
   // Generar QR dinámico para WhatsApp con el presupuesto configurado
@@ -382,29 +386,13 @@ export default function App() {
                   onChange={(e) => {
                     const nuevoId = e.target.value;
                     setProductoSeleccionado(nuevoId);
-                    const nuevoProd = CATALOGO_PRODUCTOS.find(p => p.id === nuevoId);
-                    if (nuevoProd) {
-                      let nuevaSerie = config.serie;
-                      if (!nuevoProd.seriesCompatibles.includes(config.serie)) {
-                        nuevaSerie = nuevoProd.seriesCompatibles[0] || 'ESPECIAL';
-                      }
-                      let nuevoVidrio = config.vidrio;
-                      if (!nuevoProd.cristalesCompatibles.includes(config.vidrio)) {
-                        nuevoVidrio = nuevoProd.cristalesCompatibles[0] || 'ninguno';
-                      }
-                      setConfig(prev => ({ ...prev, serie: nuevaSerie, vidrio: nuevoVidrio }));
-                    }
                   }}
                   className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition shadow-inner"
                 >
-                  {CATALOGO_PRODUCTOS
-                    .filter(p => {
-                      const vivo = preciosEnVivo[p.id];
-                      return vivo ? vivo.activo : true;
-                    })
+                  {catalogo
+                    .filter(p => p.activo)
                     .map((p) => {
-                      const vivo = preciosEnVivo[p.id];
-                      const etiquetaPrecio = vivo && vivo.precioBase ? ` ($ ${vivo.precioBase.toLocaleString('es-UY')})` : '';
+                      const etiquetaPrecio = p.precioBase ? ` ($ ${p.precioBase.toLocaleString('es-UY')})` : '';
                       return (
                         <option key={p.id} value={p.id}>
                           {p.nombre}{etiquetaPrecio}
@@ -413,13 +401,8 @@ export default function App() {
                     })}
                 </select>
                 {prodActual.nota && (
-                  <p className="text-[11px] text-slate-500 mt-1 italic flex items-center gap-1">
-                    <span>ℹ️</span> {prodActual.nota}
-                  </p>
-                )}
-                {infoEnVivoProd?.notas && (
                   <p className="text-[11px] text-orange-700 mt-1 italic flex items-center gap-1 bg-orange-50/70 p-1.5 rounded-lg border border-orange-200">
-                    <span>📌</span> {infoEnVivoProd.notas}
+                    <span>📌</span> {prodActual.nota}
                   </p>
                 )}
               </div>
@@ -434,7 +417,7 @@ export default function App() {
                   onChange={(e) => setConfig({ ...config, serie: e.target.value as SerieAluminio })}
                   className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                 >
-                  {prodActual.seriesCompatibles.map((key) => (
+                  {(Object.keys(FACTORES_SERIE) as SerieAluminio[]).map((key) => (
                     <option key={key} value={key}>
                       {FACTORES_SERIE[key].nombre}
                     </option>
@@ -531,7 +514,7 @@ export default function App() {
                   onChange={(e) => setConfig({ ...config, vidrio: e.target.value as TipoVidrio })}
                   className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                 >
-                  {prodActual.cristalesCompatibles.map((key) => (
+                  {(Object.keys(VIDRIOS) as TipoVidrio[]).map((key) => (
                     <option key={key} value={key}>
                       {VIDRIOS[key].nombre}
                     </option>

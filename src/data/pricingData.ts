@@ -3,202 +3,36 @@ import type { SerieAluminio, ColorAluminio, TipoVidrio, QuoteConfig, QuoteBreakd
 export interface ProductoCatalogo {
   id: string;
   nombre: string;
-  categoria: 'ventanas' | 'puertas' | 'mamparas' | 'sistemas' | 'especiales';
-  seriesCompatibles: SerieAluminio[];
-  cristalesCompatibles: TipoVidrio[];
+  categoria: string;
+  precioBase: number | null;
+  precioTexto: string;
+  activo: boolean;
   nota?: string;
 }
 
-// 26 PRODUCTOS OFICIALES DEL EXCEL CON SUS COMPATIBILIDADES EXACTAS
-export const CATALOGO_PRODUCTOS: ProductoCatalogo[] = [
-  // Ventanas Corredizas
-  {
-    id: 'ventana-corrediza-2h',
-    nombre: 'Ventana Corrediza (2 Hojas)',
-    categoria: 'ventanas',
-    seriesCompatibles: ['S20', 'S25', 'A82', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'ventana-corrediza-3h',
-    nombre: 'Ventana Corrediza (3 Hojas)',
-    categoria: 'ventanas',
-    seriesCompatibles: ['S25', 'A82', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'c8mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'ventana-corrediza-4h',
-    nombre: 'Ventana Corrediza (4 Hojas)',
-    categoria: 'ventanas',
-    seriesCompatibles: ['S25', 'A82', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'c8mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
+// Único producto de ejemplo/test en código local
+export const PRODUCTO_EJEMPLO_TEST: ProductoCatalogo = {
+  id: 'prod-ejemplo-test',
+  nombre: 'Producto de Ejemplo (Test)',
+  categoria: 'General',
+  precioBase: null,
+  precioTexto: 'A Convenir / Consultar',
+  activo: true,
+  nota: 'Item temporal de prueba mientras carga la planilla oficial',
+};
 
-  // Paños Fijos, Batientes y Proyectantes
-  {
-    id: 'pano-fijo',
-    nombre: 'Paño Fijo',
-    categoria: 'ventanas',
-    seriesCompatibles: ['S30', 'A82', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'ventana-batiente',
-    nombre: 'Ventana Batiente',
-    categoria: 'ventanas',
-    seriesCompatibles: ['S30'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'ventana-tabaquera',
-    nombre: 'Ventana Tabaquera',
-    categoria: 'ventanas',
-    seriesCompatibles: ['S30'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'c8mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'ventana-proyectante',
-    nombre: 'Ventana Proyectante',
-    categoria: 'ventanas',
-    seriesCompatibles: ['S30', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'c8mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'ventana-guillotina',
-    nombre: 'Ventana Guillotina',
-    categoria: 'ventanas',
-    seriesCompatibles: ['A82', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'c8mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-
-  // Bajo Mesadas
-  {
-    id: 'bajo-mesada-batiente',
-    nombre: 'Bajo Mesada (Batiente)',
-    categoria: 'especiales',
-    seriesCompatibles: ['S30'],
-    cristalesCompatibles: ['c4mm', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'bajo-mesada-corredizo',
-    nombre: 'Bajo Mesada (Corredizo)',
-    categoria: 'especiales',
-    seriesCompatibles: ['S20'],
-    cristalesCompatibles: ['c4mm', 'polic_alveolar', 'polic_compacto']
-  },
-
-  // Puertas
-  {
-    id: 'puerta-mitad-vidrio',
-    nombre: 'Puerta Mitad Aluminio y Mitad Cristal',
-    categoria: 'puertas',
-    seriesCompatibles: ['S30'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'puerta-ciega',
-    nombre: 'Puerta Toda Ciega en Aluminio',
-    categoria: 'puertas',
-    seriesCompatibles: ['S30'],
-    cristalesCompatibles: ['ninguno']
-  },
-  {
-    id: 'puerta-cristal',
-    nombre: 'Puerta en Cristal',
-    categoria: 'puertas',
-    seriesCompatibles: ['S30'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'puerta-granero',
-    nombre: 'Puerta Estilo Granero (Interior)',
-    categoria: 'puertas',
-    seriesCompatibles: ['S30'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-
-  // Sistemas Monoblock
-  {
-    id: 'monoblock-pvc',
-    nombre: 'Sistema Monoblock (Cortina PVC)',
-    categoria: 'sistemas',
-    seriesCompatibles: ['S20', 'S25', 'A82', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'monoblock-aluminio',
-    nombre: 'Sistema Monoblock (Cortina Aluminio)',
-    categoria: 'sistemas',
-    seriesCompatibles: ['S20', 'S25', 'A82', 'PROBBA', 'GALA_CR'],
-    cristalesCompatibles: ['c4mm', 'c5mm', 'c6mm', 'dvh', 'polic_alveolar', 'polic_compacto']
-  },
-
-  // Mamparas, Barandas y Rollers
-  {
-    id: 'mampara-cristal',
-    nombre: 'Mampara de Cristal',
-    categoria: 'mamparas',
-    seriesCompatibles: ['S30', 'ESPECIAL'],
-    cristalesCompatibles: ['c4mm', 'c6mm', 'c8mm', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'mampara-acrilico',
-    nombre: 'Mampara de Acrílico',
-    categoria: 'mamparas',
-    seriesCompatibles: ['S20', 'ESPECIAL'],
-    cristalesCompatibles: ['ninguno']
-  },
-  {
-    id: 'baranda-aluminio',
-    nombre: 'Baranda',
-    categoria: 'especiales',
-    seriesCompatibles: ['S30', 'ESPECIAL'],
-    cristalesCompatibles: ['c6mm', 'c8mm', 'polic_alveolar', 'polic_compacto']
-  },
-  {
-    id: 'cortina-roller',
-    nombre: 'Cortina Rollers',
-    categoria: 'sistemas',
-    seriesCompatibles: ['ESPECIAL'],
-    cristalesCompatibles: ['ninguno']
-  },
-
-  // Estructuras y Techos a Medida
-  {
-    id: 'techo-fijo',
-    nombre: 'Techo Fijo',
-    categoria: 'especiales',
-    seriesCompatibles: ['S30', 'ESPECIAL'],
-    cristalesCompatibles: ['polic_alveolar', 'polic_compacto', 'c8mm']
-  },
-  {
-    id: 'techo-automatizado',
-    nombre: 'Techo Automatizado',
-    categoria: 'especiales',
-    seriesCompatibles: ['S30', 'ESPECIAL'],
-    cristalesCompatibles: ['polic_alveolar', 'polic_compacto', 'c8mm']
-  },
-  {
-    id: 'herreria-diseno',
-    nombre: 'Herrería de Diseño',
-    categoria: 'especiales',
-    seriesCompatibles: ['S30', 'ESPECIAL'],
-    cristalesCompatibles: ['ninguno', 'polic_alveolar', 'polic_compacto']
-  },
-];
-
-// LAS 6 SERIES OFICIALES DEL EXCEL (+ ESPECIAL)
+// SERIES OFICIALES DISPONIBLES EN TALLER
 export const FACTORES_SERIE: Record<SerieAluminio, { nombre: string; desc: string }> = {
   S20: { nombre: 'Serie 20', desc: 'Línea económica residencial liviana' },
   S25: { nombre: 'Serie 25', desc: 'Línea estándar tradicional de mayor salida' },
-  S30: { nombre: 'Serie 30', desc: 'Línea reforzada para puertas, paños fijos y batientes' },
+  S30: { nombre: 'Serie 30', desc: 'Línea reforzada para aberturas amplias y batientes' },
   A82: { nombre: 'Línea A82 (Alta Prestación)', desc: 'Aislación superior y hermeticidad perimetral' },
   PROBBA: { nombre: 'Línea Probba (Alta Prestación)', desc: 'Perfilería de alta prestación y grandes luces' },
   GALA_CR: { nombre: 'Línea Gala CR (Alta Prestación)', desc: 'Máxima gama arquitectónica con rotura de puente térmico' },
   ESPECIAL: { nombre: 'Línea Especial / A Medida', desc: 'Perfilería y herrajes específicos de diseño' },
 };
 
-// LOS 5 COLORES OFICIALES DEL EXCEL
+// COLORES OFICIALES DISPONIBLES EN TALLER
 export const COLORES: Record<ColorAluminio, { nombre: string; hex: string; desc: string }> = {
   natural: { nombre: 'Anodizado Natural', hex: '#CBD5E1', desc: 'Terminación plata mate tradicional anticorrosión' },
   blanco: { nombre: 'Blanco', hex: '#FFFFFF', desc: 'Pintura electrostática blanca horneada' },
@@ -207,7 +41,7 @@ export const COLORES: Record<ColorAluminio, { nombre: string; hex: string; desc:
   electrostatica: { nombre: 'Pintura electrostática', hex: '#71717A', desc: 'Consultar gama y catálogo de colores a elección' },
 };
 
-// LOS 7 CRISTALES / VIDRIOS OFICIALES DEL EXCEL (+ NINGUNO)
+// CRISTALES / VIDRIOS OFICIALES DISPONIBLES EN TALLER
 export const VIDRIOS: Record<TipoVidrio, { nombre: string; desc: string }> = {
   c4mm: { nombre: 'Cristal 4mm', desc: 'Cristal flotado incoloro estándar 4 mm' },
   c5mm: { nombre: 'Cristal 5mm', desc: 'Cristal flotado incoloro 5 mm' },
@@ -232,7 +66,11 @@ export const DATOS_EMPRESA = {
   condicionesPago: '50% seña para reserva de perfiles, 50% saldo contra entrega en taller',
 };
 
-export function calcularPresupuesto(config: QuoteConfig, precioBaseTaller?: number | null, precioTextoPersonalizado?: string): QuoteBreakdown {
+export function calcularPresupuesto(
+  config: QuoteConfig,
+  precioBaseTaller?: number | null,
+  precioTextoPersonalizado?: string
+): QuoteBreakdown {
   const infoSerie = FACTORES_SERIE[config.serie] || FACTORES_SERIE['S25'];
   const infoColor = COLORES[config.color] || COLORES['natural'];
   const infoVidrio = VIDRIOS[config.vidrio] || VIDRIOS['c4mm'];
@@ -273,7 +111,7 @@ export function calcularPresupuesto(config: QuoteConfig, precioBaseTaller?: numb
 }
 
 export function generarTextoWhatsApp(breakdown: QuoteBreakdown, productoNombre?: string): string {
-  const nombreAbertura = productoNombre || 'Ventana Corrediza (2 Hojas)';
+  const nombreAbertura = productoNombre || 'Abertura en Aluminio';
 
   const lineasConsulta = [
     `*CONSULTA DE COTIZACIÓN - CD ALUMINIO*`,
