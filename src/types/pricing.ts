@@ -9,6 +9,7 @@ export interface QuoteConfig {
   color: ColorAluminio;
   vidrio: TipoVidrio;
   conColocacion: boolean;
+  descuento: string; // % opcional de descuento manual
 }
 
 export interface QuoteBreakdown {
@@ -21,5 +22,9 @@ export interface QuoteBreakdown {
   conColocacion: boolean;
   costoColocacionTexto: string;
   precioTexto: string;
+  tieneDescuento: boolean;
+  descuentoPorcentaje: number;
+  descuentoMontoTexto: string;
+  precioListaTexto: string;
   vigenciaDias: number;
 }

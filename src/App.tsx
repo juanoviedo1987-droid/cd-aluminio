@@ -15,6 +15,7 @@ import type { ProductoCatalogo } from './data/pricingData';
 import { cargarCatalogoDesdeGoogleSheets, cargarFactoresDesdeGoogleSheets } from './services/sheetsService';
 import type { FactoresTaller } from './services/sheetsService';
 import type { QuoteConfig, SerieAluminio, ColorAluminio, TipoVidrio } from './types/pricing';
+import { TooltipInfo } from './components/TooltipInfo';
 import {
   Phone,
   MapPin,
@@ -81,6 +82,7 @@ export default function App() {
     color: 'natural',
     vidrio: 'c4mm',
     conColocacion: false,
+    descuento: '',
   });
 
   const prodActual = catalogo.find(p => p.id === productoSeleccionado) || catalogo[0] || PRODUCTO_EJEMPLO_TEST;
@@ -479,9 +481,12 @@ export default function App() {
               {/* 4. MEDIDA LIBRE (ANCHO X ALTO) */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    4. Medidas Estimadas (Ancho x Alto)
-                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      4. Medidas Estimadas (Ancho x Alto)
+                    </label>
+                    <TooltipInfo texto="Ancho y alto en cm. Si no tenés la medida exacta, podés dejar los campos vacíos." />
+                  </div>
                   <span className="text-[11px] text-slate-500 font-medium">Opcional en cm</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -515,7 +520,7 @@ export default function App() {
                 <p className="text-[11px] text-slate-500 mt-1 italic">
                   {config.ancho && config.alto
                     ? `Medida configurada: ${config.ancho} cm Ancho x ${config.alto} cm Alto`
-                    : 'Si aún no tenés las medidas exactas, podés dejar los campos vacíos y se coordina la rectificación en obra.'}
+                    : 'Si aún no tenés las medidas exactas, podés dejar los campos vacíos.'}
                 </p>
               </div>
 
@@ -592,6 +597,49 @@ export default function App() {
                 )}
               </div>
 
+              {/* 7. DESCUENTO / BONIFICACIÓN DE TALLER (MANUAL Y OPCIONAL) */}
+              <div className="space-y-1.5 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      7. Descuento / Bonificación de Taller
+                    </label>
+                    <TooltipInfo texto="Opcional. Ingresá el % de rebaja (ej: 20 para un 20%). Si lo dejás vacío, se cotiza a precio de lista oficial." />
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-medium">Opcional</span>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="100"
+                    value={config.descuento}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 3);
+                      setConfig({ ...config, descuento: val });
+                    }}
+                    placeholder="0"
+                    className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 pr-10 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder:text-slate-400"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
+                    %
+                  </div>
+                </div>
+
+                {breakdown.tieneDescuento ? (
+                  <p className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-lg p-1.5 flex items-center justify-between">
+                    <span>✓ Bonificación de taller aplicada: -{breakdown.descuentoPorcentaje}%</span>
+                    <span>({breakdown.descuentoMontoTexto})</span>
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">
+                    Dejar vacío para emitir presupuesto a precio oficial de lista.
+                  </p>
+                )}
+              </div>
+
             </div>
           </div>
 
@@ -636,18 +684,33 @@ export default function App() {
                     {breakdown.costoColocacionTexto}
                   </span>
                 </div>
+
+                {breakdown.tieneDescuento && (
+                  <>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Precio Lista:</span>
+                      <span className="font-semibold text-slate-500 line-through">{breakdown.precioListaTexto}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100 text-emerald-700 font-bold bg-emerald-50/70 px-1.5 py-1 rounded">
+                      <span>Bonif. Taller (-{breakdown.descuentoPorcentaje}%):</span>
+                      <span>{breakdown.descuentoMontoTexto}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* CAJA DE ESTADO */}
               <div className="bg-neutral-900 text-white rounded-xl p-4 shadow-md">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">
-                  Estado de la Estimación
+                  {breakdown.tieneDescuento ? 'Total Estimado con Bonificación' : 'Estado de la Estimación'}
                 </span>
                 <div className="text-xl font-black text-orange-400 leading-tight">
                   {breakdown.precioTexto}
                 </div>
                 <p className="text-[10px] text-neutral-400 mt-2">
-                  Presupuesto referencial sujeto a validación técnica de escuadría y vano en obra.
+                  {breakdown.tieneDescuento
+                    ? `Incluye descuento comercial de taller (-${breakdown.descuentoPorcentaje}%). Sujeto a validación en obra.`
+                    : 'Presupuesto referencial sujeto a validación técnica de escuadría y vano en obra.'}
                 </p>
               </div>
 
@@ -795,13 +858,27 @@ export default function App() {
                       {breakdown.costoColocacionTexto}
                     </span>
                   </div>
+                  {breakdown.tieneDescuento && (
+                    <>
+                      <div className="p-2.5 flex justify-between bg-slate-50">
+                        <span className="text-slate-500">Precio Oficial de Lista:</span>
+                        <span className="font-semibold text-slate-500 line-through">{breakdown.precioListaTexto}</span>
+                      </div>
+                      <div className="p-2.5 flex justify-between bg-emerald-50 text-emerald-900 font-bold">
+                        <span>Bonificación de Taller (-{breakdown.descuentoPorcentaje}%):</span>
+                        <span className="text-emerald-700">{breakdown.descuentoMontoTexto}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* TOTAL */}
               <div className="bg-neutral-900 text-white p-3.5 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
-                  <span className="font-bold text-xs tracking-wide block">ESTADO ESTIMACIÓN:</span>
+                  <span className="font-bold text-xs tracking-wide block">
+                    {breakdown.tieneDescuento ? 'TOTAL ESTIMADO CON BONIFICACIÓN:' : 'ESTADO ESTIMACIÓN:'}
+                  </span>
                   <span className="text-[9px] text-neutral-400 block">Sujeto a validación técnica en obra</span>
                 </div>
                 <span className="text-sm sm:text-base font-black text-orange-400 text-right">

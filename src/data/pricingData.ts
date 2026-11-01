@@ -101,6 +101,11 @@ export function calcularPresupuesto(
   }
 
   let precioCalculadoTexto = prodActual?.precioTexto || 'A Convenir / Consultar';
+  let precioListaTexto = '';
+  let tieneDescuento = false;
+  let descuentoPorcentaje = 0;
+  let descuentoMontoTexto = '';
+
   const precioBase = prodActual?.precioBase;
 
   if (precioBase && precioBase > 0) {
@@ -118,10 +123,27 @@ export function calcularPresupuesto(
       subtotal = Math.round(subtotal * (1 + factorSerie));
     }
 
+    const subtotalLista = subtotal;
+    precioListaTexto = `$ ${subtotalLista.toLocaleString('es-UY')} UYU`;
+
+    // Evaluar si se ingresó un porcentaje de descuento manual (ej: 20)
+    const descInput = parseFloat((config.descuento || '').replace(/[^0-9.]/g, ''));
+    if (!isNaN(descInput) && descInput > 0 && descInput <= 100) {
+      tieneDescuento = true;
+      descuentoPorcentaje = descInput;
+      const montoDescuento = Math.round(subtotalLista * (descInput / 100));
+      subtotal = subtotalLista - montoDescuento;
+      descuentoMontoTexto = `-$ ${montoDescuento.toLocaleString('es-UY')} UYU`;
+    }
+
     if (tieneAncho || tieneAlto) {
-      precioCalculadoTexto = `Desde $ ${subtotal.toLocaleString('es-UY')} UYU (Ref.)`;
+      precioCalculadoTexto = tieneDescuento
+        ? `Desde $ ${subtotal.toLocaleString('es-UY')} UYU (Bonif.)`
+        : `Desde $ ${subtotal.toLocaleString('es-UY')} UYU (Ref.)`;
     } else {
-      precioCalculadoTexto = `$ ${subtotal.toLocaleString('es-UY')} UYU (Base)`;
+      precioCalculadoTexto = tieneDescuento
+        ? `$ ${subtotal.toLocaleString('es-UY')} UYU (Bonif.)`
+        : `$ ${subtotal.toLocaleString('es-UY')} UYU (Base)`;
     }
   }
 
@@ -135,6 +157,10 @@ export function calcularPresupuesto(
     conColocacion: esMampara ? true : config.conColocacion,
     costoColocacionTexto,
     precioTexto: precioCalculadoTexto,
+    tieneDescuento,
+    descuentoPorcentaje,
+    descuentoMontoTexto,
+    precioListaTexto,
     vigenciaDias: DATOS_EMPRESA.vigenciaDias,
   };
 }
@@ -152,11 +178,19 @@ export function generarTextoWhatsApp(breakdown: QuoteBreakdown, productoNombre?:
     `*Medidas:* ${breakdown.medidaTexto}`,
     `*Cristal:* ${breakdown.vidrioNombre}`,
     `*Instalación:* ${breakdown.conColocacion ? 'Con colocación en obra' : 'Retiro en taller'}`,
-    `*Estimación:* ${breakdown.precioTexto}`,
-    `----------------------------------------`,
-    `_Nota: Presupuesto referencial sujeto a validación técnica de escuadría y vano en obra._`,
-    `Hola CD Aluminio, les envío esta configuración para coordinar rectificación y presupuesto formal. Aguardo su respuesta.`
   ];
+
+  if (breakdown.tieneDescuento) {
+    lineasConsulta.push(`*Precio de lista:* ${breakdown.precioListaTexto}`);
+    lineasConsulta.push(`*Bonificación especial:* -${breakdown.descuentoPorcentaje}% (${breakdown.descuentoMontoTexto})`);
+    lineasConsulta.push(`*Total bonificado:* ${breakdown.precioTexto}`);
+  } else {
+    lineasConsulta.push(`*Estimación:* ${breakdown.precioTexto}`);
+  }
+
+  lineasConsulta.push(`----------------------------------------`);
+  lineasConsulta.push(`_Nota: Presupuesto referencial sujeto a validación técnica de escuadría y vano en obra._`);
+  lineasConsulta.push(`Hola CD Aluminio, les envío esta configuración para coordinar rectificación y presupuesto formal. Aguardo su respuesta.`);
 
   return encodeURIComponent(lineasConsulta.join('\n'));
 }
