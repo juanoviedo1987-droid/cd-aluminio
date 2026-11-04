@@ -86,12 +86,25 @@ export default function App() {
     descuento: '',
   });
 
-  const anchosDisponiblesCm = matrizPrecios.anchos.map(a => a / 10);
-  const anchoMmNum = Math.round(parseFloat(config.ancho) * 10);
-  const altosDisponiblesCm = matrizPrecios.altos
-    .filter(h => matrizPrecios.precios[`${anchoMmNum}x${h}`] !== undefined)
-    .map(h => h / 10);
-  const altosOpciones = altosDisponiblesCm.length > 0 ? altosDisponiblesCm : matrizPrecios.altos.map(h => h / 10);
+  const anchosDisponiblesCm = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250];
+  const altosOpciones = [40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160];
+
+  const handleForzarSincronizacion = async () => {
+    setSincronizandoSheets(true);
+    try {
+      const [listaProds, matrizCargada] = await Promise.all([
+        cargarCatalogoDesdeGoogleSheets(),
+        cargarMatrizSerie20DesdeGoogleSheets(),
+      ]);
+      if (listaProds.length > 0) {
+        setCatalogo(listaProds);
+        setMatrizPrecios(matrizCargada);
+        setUltimaSincronizacion(new Date());
+      }
+    } finally {
+      setSincronizandoSheets(false);
+    }
+  };
 
   const prodActual = catalogo.find(p => p.id === productoSeleccionado) || catalogo[0] || PRODUCTO_EJEMPLO_TEST;
 
@@ -400,11 +413,17 @@ export default function App() {
                     <span className="text-[10px] text-orange-600 font-semibold flex items-center gap-1 animate-pulse">
                       <span className="w-2 h-2 rounded-full bg-orange-500"></span> Conectando catálogo...
                     </span>
-                  ) : ultimaSincronizacion ? (
-                    <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Conectado a Hoja Drive
-                    </span>
-                  ) : null}
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleForzarSincronizacion()}
+                      title={ultimaSincronizacion ? `Última sincronización: ${ultimaSincronizacion.toLocaleTimeString('es-UY')}` : 'Sincronizar'}
+                      className="text-[10px] text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1 transition active:scale-95"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <span>Hoja Drive (Sincronizar 🔄)</span>
+                    </button>
+                  )}
                 </div>
                 <select
                   value={productoSeleccionado}
@@ -521,15 +540,7 @@ export default function App() {
                       </label>
                       <select
                         value={config.ancho}
-                        onChange={(e) => {
-                          const nuevoAncho = e.target.value;
-                          const nuevoAnchoMm = Math.round(parseFloat(nuevoAncho) * 10);
-                          const altosValidos = matrizPrecios.altos
-                            .filter(h => matrizPrecios.precios[`${nuevoAnchoMm}x${h}`] !== undefined)
-                            .map(h => (h / 10).toString());
-                          const nuevoAlto = altosValidos.includes(config.alto) ? config.alto : (altosValidos[0] || '100');
-                          setConfig(prev => ({ ...prev, ancho: nuevoAncho, alto: nuevoAlto }));
-                        }}
+                        onChange={(e) => setConfig(prev => ({ ...prev, ancho: e.target.value }))}
                         className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                       >
                         {anchosDisponiblesCm.map(w => (

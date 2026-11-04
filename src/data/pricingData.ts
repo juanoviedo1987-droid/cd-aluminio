@@ -99,12 +99,35 @@ export function buscarPrecioEnMatriz(
     };
   }
 
-  // Redondeo estándar al módulo superior más próximo
-  const anchoStd = matriz.anchos.find((a) => a >= anchoMm) || maxAncho;
-  const altoStd = matriz.altos.find((h) => h >= altoMm) || maxAlto;
+  // 1. Redondeo estándar al módulo superior más próximo
+  let anchoStd = matriz.anchos.find((a) => a >= anchoMm) || maxAncho;
+  let altoStd = matriz.altos.find((h) => h >= altoMm) || maxAlto;
 
-  const key = `${anchoStd}x${altoStd}`;
-  const precio = matriz.precios[key] || null;
+  let key = `${anchoStd}x${altoStd}`;
+  let precio = matriz.precios[key] || null;
+
+  // 2. Si esa combinación exacta no estaba en la tabla original, buscar el módulo válido más próximo
+  if (precio === null) {
+    // Si la altura es menor a la mínima de ese ancho (ej. 1400x400), buscar altura válida más próxima
+    for (const h of matriz.altos) {
+      if (h >= altoStd && matriz.precios[`${anchoStd}x${h}`]) {
+        altoStd = h;
+        precio = matriz.precios[`${anchoStd}x${h}`];
+        break;
+      }
+    }
+    // Si la altura excedía el máximo de ese ancho (ej. 600x1200), buscar el ancho siguiente que sí tenga esa altura
+    if (precio === null) {
+      for (const w of matriz.anchos) {
+        if (w >= anchoStd && matriz.precios[`${w}x${altoStd}`]) {
+          anchoStd = w;
+          precio = matriz.precios[`${w}x${altoStd}`];
+          break;
+        }
+      }
+    }
+  }
+
   const esExacto = anchoMm === anchoStd && altoMm === altoStd;
 
   return {
@@ -112,7 +135,7 @@ export function buscarPrecioEnMatriz(
     anchoStd,
     altoStd,
     esExacto,
-    fueraDeRango: false,
+    fueraDeRango: precio === null,
   };
 }
 
