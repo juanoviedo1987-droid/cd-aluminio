@@ -12,8 +12,13 @@ import {
   generarTextoWhatsApp,
 } from './data/pricingData';
 import type { ProductoCatalogo } from './data/pricingData';
-import { cargarCatalogoDesdeGoogleSheets, cargarFactoresDesdeGoogleSheets } from './services/sheetsService';
+import {
+  cargarCatalogoDesdeGoogleSheets,
+  cargarFactoresDesdeGoogleSheets,
+  cargarMatrizSerie20DesdeGoogleSheets,
+} from './services/sheetsService';
 import type { FactoresTaller } from './services/sheetsService';
+import { MATRIZ_SERIE_20_BASE, type MatrizSerie20Data } from './data/matrizSerie20';
 import type { QuoteConfig, SerieAluminio, ColorAluminio, TipoVidrio } from './types/pricing';
 import { TooltipInfo } from './components/TooltipInfo';
 import {
@@ -42,9 +47,10 @@ export default function App() {
   const [pinIngresado, setPinIngresado] = useState('');
   const [errorPin, setErrorPin] = useState(false);
 
-  // Catálogo y Factores dinámicos 100% alimentados desde Google Sheets
+  // Catálogo, Factores y Matriz de Precios Oficial Serie 20 (Sincronizada con Google Sheets)
   const [catalogo, setCatalogo] = useState<ProductoCatalogo[]>([PRODUCTO_EJEMPLO_TEST]);
   const [factoresTaller, setFactoresTaller] = useState<FactoresTaller | null>(null);
+  const [matrizPrecios, setMatrizPrecios] = useState<MatrizSerie20Data>(MATRIZ_SERIE_20_BASE);
   const [sincronizandoSheets, setSincronizandoSheets] = useState(false);
   const [ultimaSincronizacion, setUltimaSincronizacion] = useState<Date | null>(null);
 
@@ -52,14 +58,16 @@ export default function App() {
     let montado = true;
     async function cargar() {
       setSincronizandoSheets(true);
-      const [listaProds, factores] = await Promise.all([
+      const [listaProds, factores, matrizCargada] = await Promise.all([
         cargarCatalogoDesdeGoogleSheets(),
         cargarFactoresDesdeGoogleSheets(),
+        cargarMatrizSerie20DesdeGoogleSheets(),
       ]);
 
       if (montado && listaProds.length > 0) {
         setCatalogo(listaProds);
         setFactoresTaller(factores);
+        setMatrizPrecios(matrizCargada);
         setSincronizandoSheets(false);
         setUltimaSincronizacion(new Date());
         setProductoSeleccionado(prev => {
@@ -74,11 +82,11 @@ export default function App() {
     };
   }, []);
 
-  const [productoSeleccionado, setProductoSeleccionado] = useState('prod-ejemplo-test');
+  const [productoSeleccionado, setProductoSeleccionado] = useState('V-CORR-S20');
   const [config, setConfig] = useState<QuoteConfig>({
-    ancho: '',
-    alto: '',
-    serie: 'S25',
+    ancho: '120',
+    alto: '100',
+    serie: 'S20',
     color: 'natural',
     vidrio: 'c4mm',
     conColocacion: false,
@@ -98,7 +106,8 @@ export default function App() {
   const breakdown = calcularPresupuesto(
     config,
     prodActual,
-    factoresTaller?.recargosSerie
+    factoresTaller?.recargosSerie,
+    matrizPrecios
   );
 
   // Generar QR dinámico para WhatsApp con el presupuesto configurado
@@ -522,6 +531,16 @@ export default function App() {
                     ? `Medida configurada: ${config.ancho} cm Ancho x ${config.alto} cm Alto`
                     : 'Si aún no tenés las medidas exactas, podés dejar los campos vacíos.'}
                 </p>
+                {breakdown.moduloEstandarTexto && (
+                  <div className={`mt-2 p-2 rounded-lg text-xs font-semibold flex items-center gap-2 border ${
+                    breakdown.fueraDeRango
+                      ? 'bg-amber-50 text-amber-800 border-amber-200'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  }`}>
+                    <span>{breakdown.fueraDeRango ? '⚠️' : '📐'}</span>
+                    <span>{breakdown.moduloEstandarTexto}</span>
+                  </div>
+                )}
               </div>
 
               {/* 5. TIPO DE VIDRIO / CRISTAL */}
@@ -672,7 +691,14 @@ export default function App() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Medida:</span>
-                  <span className="font-semibold text-slate-900">{breakdown.medidaTexto}</span>
+                  <span className="font-semibold text-slate-900 text-right">
+                    {breakdown.medidaTexto}
+                    {breakdown.moduloEstandarTexto && (
+                      <span className="block text-[10px] text-emerald-600 font-normal">
+                        {breakdown.moduloEstandarTexto}
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Vidrio:</span>
@@ -846,7 +872,14 @@ export default function App() {
                   </div>
                   <div className="p-2.5 flex justify-between">
                     <span className="text-slate-500">Dimensiones:</span>
-                    <span className="font-bold text-slate-900">{breakdown.medidaTexto}</span>
+                    <span className="font-bold text-slate-900 text-right">
+                      {breakdown.medidaTexto}
+                      {breakdown.moduloEstandarTexto && (
+                        <span className="block text-[10px] text-slate-500 font-normal">
+                          {breakdown.moduloEstandarTexto}
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div className="p-2.5 flex justify-between">
                     <span className="text-slate-500">Cristal:</span>

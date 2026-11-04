@@ -1,5 +1,6 @@
 import type { ProductoCatalogo } from '../data/pricingData';
-import { PRODUCTO_EJEMPLO_TEST } from '../data/pricingData';
+import { PRODUCTO_VENTANA_SERIE_20 } from '../data/pricingData';
+import { MATRIZ_SERIE_20_BASE, type MatrizSerie20Data } from '../data/matrizSerie20';
 
 export const SHEET_CATALOGO_CSV_URL =
   'https://docs.google.com/spreadsheets/d/1CwBvdnMt_JMOejCKHwH0PKnMOaRHw3c4cKXxEDaHgWQ/export?format=csv&gid=480036493';
@@ -8,9 +9,9 @@ export const SHEET_FACTORES_CSV_URL =
   'https://docs.google.com/spreadsheets/d/1CwBvdnMt_JMOejCKHwH0PKnMOaRHw3c4cKXxEDaHgWQ/export?format=csv&gid=1358754395';
 
 export interface FactoresTaller {
-  recargosSerie: Record<string, number>; // Ej: { 'S25': 0.40, 'A82': 0.35, 'PROBBA': 0.45, 'GALA_CR': 0.65 }
-  recargosColor: Record<string, number>; // Ej: { 'anolok': 0.20, 'electrostatica': 0.20 }
-  motorizacion: number; // 12800
+  recargosSerie: Record<string, number>;
+  recargosColor: Record<string, number>;
+  motorizacion: number;
 }
 
 export const FACTORES_POR_DEFECTO: FactoresTaller = {
@@ -71,61 +72,81 @@ function parsearCSVLineas(textoCSV: string): string[][] {
   return lineas;
 }
 
-export async function cargarCatalogoDesdeGoogleSheets(): Promise<ProductoCatalogo[]> {
+export function parsearMatrizSerie20CSV(textoCSV: string): MatrizSerie20Data | null {
+  try {
+    const filas = parsearCSVLineas(textoCSV);
+    if (filas.length < 2) return null;
+
+    const filaEncabezados = filas[0];
+    const anchos: number[] = [];
+    const anchosIndex: { colIndex: number; ancho: number }[] = [];
+
+    // Encabezados: [0] es "Alto (mm) / Ancho (mm)", de [1] en adelante son "600 mm", "700 mm", etc.
+    for (let col = 1; col < filaEncabezados.length; col++) {
+      const raw = filaEncabezados[col] || '';
+      const num = parseInt(raw.replace(/[^\d]/g, ''), 10);
+      if (!isNaN(num) && num > 0) {
+        anchos.push(num);
+        anchosIndex.push({ colIndex: col, ancho: num });
+      }
+    }
+
+    if (anchos.length === 0) return null;
+
+    const altos: number[] = [];
+    const precios: Record<string, number> = {};
+
+    for (let f = 1; f < filas.length; f++) {
+      const fila = filas[f];
+      if (!fila || fila.length === 0) continue;
+
+      const rawAlto = fila[0] || '';
+      const altoNum = parseInt(rawAlto.replace(/[^\d]/g, ''), 10);
+      if (isNaN(altoNum) || altoNum <= 0) continue;
+
+      altos.push(altoNum);
+
+      for (const item of anchosIndex) {
+        const rawPrecio = fila[item.colIndex] || '';
+        const precioLimpio = parseInt(rawPrecio.replace(/[^\d]/g, ''), 10);
+        if (!isNaN(precioLimpio) && precioLimpio > 0) {
+          precios[`${item.ancho}x${altoNum}`] = precioLimpio;
+        }
+      }
+    }
+
+    if (Object.keys(precios).length === 0) return null;
+
+    return {
+      anchos: anchos.sort((a, b) => a - b),
+      altos: altos.sort((a, b) => a - b),
+      precios,
+    };
+  } catch (err) {
+    console.warn('[Google Sheets] Error al procesar matriz Serie 20 CSV:', err);
+    return null;
+  }
+}
+
+export async function cargarMatrizSerie20DesdeGoogleSheets(): Promise<MatrizSerie20Data> {
   try {
     const url = `${SHEET_CATALOGO_CSV_URL}&_t=${Date.now()}`;
     const res = await fetch(url, { cache: 'no-cache' });
-
-    if (!res.ok) return [PRODUCTO_EJEMPLO_TEST];
+    if (!res.ok) return MATRIZ_SERIE_20_BASE;
 
     const csvText = await res.text();
-    const filas = parsearCSVLineas(csvText);
+    const matrizParseada = parsearMatrizSerie20CSV(csvText);
 
-    if (filas.length < 2) return [PRODUCTO_EJEMPLO_TEST];
-
-    const productos: ProductoCatalogo[] = [];
-
-    // Encabezados: [0] ID, [1] Producto, [2] Categoría, [3] Tipo Cálculo (Unidad/m2), [4] Precio Base, [5] Estado, [6] Notas
-    for (let i = 1; i < filas.length; i++) {
-      const col = filas[i];
-      if (!col || col.length < 2) continue;
-
-      const rawId = col[0]?.trim() || `prod-${i}`;
-      const nombre = col[1]?.trim();
-      if (!nombre) continue;
-
-      const categoria = col[2]?.trim() || 'General';
-      const esPorM2 = (col[3]?.trim().toLowerCase() === 'm2');
-
-      const precioRaw = col[4] ? col[4].replace(/[$. ,]/g, '').trim() : '';
-      const precioNum = precioRaw && !isNaN(Number(precioRaw)) ? Number(precioRaw) : null;
-
-      const estado = col[5] ? col[5].toUpperCase().trim() : 'ACTIVO';
-      const activo = estado !== 'PAUSADO' && estado !== 'INACTIVO' && estado !== 'NO';
-      const nota = col[6]?.trim() || '';
-
-      let precioTexto = 'A Convenir / Consultar';
-      if (precioNum !== null && precioNum > 0) {
-        precioTexto = esPorM2 ? `$ ${precioNum.toLocaleString('es-UY')} UYU / m²` : `$ ${precioNum.toLocaleString('es-UY')} UYU`;
-      }
-
-      productos.push({
-        id: rawId,
-        nombre,
-        categoria,
-        esPorM2,
-        precioBase: precioNum,
-        precioTexto,
-        activo,
-        nota: nota || undefined,
-      });
-    }
-
-    return productos.length > 0 ? productos : [PRODUCTO_EJEMPLO_TEST];
+    return matrizParseada || MATRIZ_SERIE_20_BASE;
   } catch (error) {
-    console.warn('[Google Sheets] Error al cargar catálogo:', error);
-    return [PRODUCTO_EJEMPLO_TEST];
+    console.warn('[Google Sheets] Error al cargar matriz desde Sheet, usando local:', error);
+    return MATRIZ_SERIE_20_BASE;
   }
+}
+
+export async function cargarCatalogoDesdeGoogleSheets(): Promise<ProductoCatalogo[]> {
+  // Enfocado exclusivamente en el producto real: Ventana Corrediza Serie 20
+  return [PRODUCTO_VENTANA_SERIE_20];
 }
 
 export async function cargarFactoresDesdeGoogleSheets(): Promise<FactoresTaller> {

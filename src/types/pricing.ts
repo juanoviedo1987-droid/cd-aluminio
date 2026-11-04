@@ -14,6 +14,8 @@ export interface QuoteConfig {
 
 export interface QuoteBreakdown {
   medidaTexto: string;
+  moduloEstandarTexto?: string;
+  fueraDeRango?: boolean;
   ancho: string;
   alto: string;
   serieNombre: string;
