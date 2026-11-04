@@ -1,0 +1,44 @@
+{
+  "requests": [
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 1172107161,
+          "startRowIndex": 1,
+          "endRowIndex": 10,
+          "startColumnIndex": 6,
+          "endColumnIndex": 7
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "numberFormat": {
+              "type": "CURRENCY",
+              "pattern": "$#,##0"
+            }
+          }
+        },
+        "fields": "userEnteredFormat.numberFormat"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 1172107161,
+          "startRowIndex": 1,
+          "endRowIndex": 10,
+          "startColumnIndex": 8,
+          "endColumnIndex": 9
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "numberFormat": {
+              "type": "CURRENCY",
+              "pattern": "$#,##0"
+            }
+          }
+        },
+        "fields": "userEnteredFormat.numberFormat"
+      }
+    }
+  ]
+}

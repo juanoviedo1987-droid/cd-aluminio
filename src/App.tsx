@@ -4,9 +4,7 @@ import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import {
   PRODUCTO_EJEMPLO_TEST,
-  FACTORES_SERIE,
   COLORES,
-  VIDRIOS,
   DATOS_EMPRESA,
   calcularPresupuesto,
   generarTextoWhatsApp,
@@ -14,12 +12,10 @@ import {
 import type { ProductoCatalogo } from './data/pricingData';
 import {
   cargarCatalogoDesdeGoogleSheets,
-  cargarFactoresDesdeGoogleSheets,
   cargarMatrizSerie20DesdeGoogleSheets,
 } from './services/sheetsService';
-import type { FactoresTaller } from './services/sheetsService';
 import { MATRIZ_SERIE_20_BASE, type MatrizSerie20Data } from './data/matrizSerie20';
-import type { QuoteConfig, SerieAluminio, ColorAluminio, TipoVidrio } from './types/pricing';
+import type { QuoteConfig, ColorAluminio } from './types/pricing';
 import { TooltipInfo } from './components/TooltipInfo';
 import {
   Phone,
@@ -47,9 +43,8 @@ export default function App() {
   const [pinIngresado, setPinIngresado] = useState('');
   const [errorPin, setErrorPin] = useState(false);
 
-  // Catálogo, Factores y Matriz de Precios Oficial Serie 20 (Sincronizada con Google Sheets)
+  // Catálogo y Matriz de Precios Oficial Serie 20 (Sincronizada con Google Sheets)
   const [catalogo, setCatalogo] = useState<ProductoCatalogo[]>([PRODUCTO_EJEMPLO_TEST]);
-  const [factoresTaller, setFactoresTaller] = useState<FactoresTaller | null>(null);
   const [matrizPrecios, setMatrizPrecios] = useState<MatrizSerie20Data>(MATRIZ_SERIE_20_BASE);
   const [sincronizandoSheets, setSincronizandoSheets] = useState(false);
   const [ultimaSincronizacion, setUltimaSincronizacion] = useState<Date | null>(null);
@@ -58,15 +53,13 @@ export default function App() {
     let montado = true;
     async function cargar() {
       setSincronizandoSheets(true);
-      const [listaProds, factores, matrizCargada] = await Promise.all([
+      const [listaProds, matrizCargada] = await Promise.all([
         cargarCatalogoDesdeGoogleSheets(),
-        cargarFactoresDesdeGoogleSheets(),
         cargarMatrizSerie20DesdeGoogleSheets(),
       ]);
 
       if (montado && listaProds.length > 0) {
         setCatalogo(listaProds);
-        setFactoresTaller(factores);
         setMatrizPrecios(matrizCargada);
         setSincronizandoSheets(false);
         setUltimaSincronizacion(new Date());
@@ -84,14 +77,21 @@ export default function App() {
 
   const [productoSeleccionado, setProductoSeleccionado] = useState('V-CORR-S20');
   const [config, setConfig] = useState<QuoteConfig>({
+    modoMedida: 'estandar',
     ancho: '120',
     alto: '100',
     serie: 'S20',
     color: 'natural',
-    vidrio: 'c4mm',
     conColocacion: false,
     descuento: '',
   });
+
+  const anchosDisponiblesCm = matrizPrecios.anchos.map(a => a / 10);
+  const anchoMmNum = Math.round(parseFloat(config.ancho) * 10);
+  const altosDisponiblesCm = matrizPrecios.altos
+    .filter(h => matrizPrecios.precios[`${anchoMmNum}x${h}`] !== undefined)
+    .map(h => h / 10);
+  const altosOpciones = altosDisponiblesCm.length > 0 ? altosDisponiblesCm : matrizPrecios.altos.map(h => h / 10);
 
   const prodActual = catalogo.find(p => p.id === productoSeleccionado) || catalogo[0] || PRODUCTO_EJEMPLO_TEST;
 
@@ -106,7 +106,6 @@ export default function App() {
   const breakdown = calcularPresupuesto(
     config,
     prodActual,
-    factoresTaller?.recargosSerie,
     matrizPrecios
   );
 
@@ -417,14 +416,11 @@ export default function App() {
                 >
                   {catalogo
                     .filter(p => p.activo)
-                    .map((p) => {
-                      const etiquetaPrecio = p.precioBase ? ` ($ ${p.precioBase.toLocaleString('es-UY')})` : '';
-                      return (
-                        <option key={p.id} value={p.id}>
-                          {p.nombre}{etiquetaPrecio}
-                        </option>
-                      );
-                    })}
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
                 </select>
                 {prodActual.nota && (
                   <p className="text-[11px] text-orange-700 mt-1 italic flex items-center gap-1 bg-orange-50/70 p-1.5 rounded-lg border border-orange-200">
@@ -438,19 +434,14 @@ export default function App() {
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   2. Línea / Serie
                 </label>
-                <select
-                  value={config.serie}
-                  onChange={(e) => setConfig({ ...config, serie: e.target.value as SerieAluminio })}
-                  className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                >
-                  {(Object.keys(FACTORES_SERIE) as SerieAluminio[]).map((key) => (
-                    <option key={key} value={key}>
-                      {FACTORES_SERIE[key].nombre}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-3 text-sm font-bold text-slate-900 flex items-center justify-between shadow-inner">
+                  <span>Serie 20</span>
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                    Oficial Taller
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-500 mt-1 italic">
-                  {FACTORES_SERIE[config.serie]?.desc}
+                  Línea oficial de taller en perfiles de aluminio.
                 </p>
               </div>
 
@@ -487,50 +478,122 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 4. MEDIDA LIBRE (ANCHO X ALTO) */}
+              {/* 4. MEDIDAS */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      4. Medidas Estimadas (Ancho x Alto)
+                      4. Medidas (Ancho x Alto)
                     </label>
-                    <TooltipInfo texto="Ancho y alto en cm. Si no tenés la medida exacta, podés dejar los campos vacíos." />
+                    <TooltipInfo texto="Seleccioná una medida estándar disponible en taller o cambiá a 'A Medida' para ingresar medidas libres." />
                   </div>
-                  <span className="text-[11px] text-slate-500 font-medium">Opcional en cm</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Ancho (cm):
-                    </label>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={config.ancho}
-                      onChange={(e) => setConfig({ ...config, ancho: e.target.value })}
-                      placeholder="Ej: 120"
-                      className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Alto (cm):
-                    </label>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={config.alto}
-                      onChange={(e) => setConfig({ ...config, alto: e.target.value })}
-                      placeholder="Ej: 100"
-                      className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                    />
+                  <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setConfig(prev => ({ ...prev, modoMedida: 'estandar' }))}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition ${
+                        config.modoMedida === 'estandar'
+                          ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Medidas Estándar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfig(prev => ({ ...prev, modoMedida: 'personalizada' }))}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition ${
+                        config.modoMedida === 'personalizada'
+                          ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      A Medida
+                    </button>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1 italic">
+
+                {config.modoMedida === 'estandar' ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Ancho Disponible (cm):
+                      </label>
+                      <select
+                        value={config.ancho}
+                        onChange={(e) => {
+                          const nuevoAncho = e.target.value;
+                          const nuevoAnchoMm = Math.round(parseFloat(nuevoAncho) * 10);
+                          const altosValidos = matrizPrecios.altos
+                            .filter(h => matrizPrecios.precios[`${nuevoAnchoMm}x${h}`] !== undefined)
+                            .map(h => (h / 10).toString());
+                          const nuevoAlto = altosValidos.includes(config.alto) ? config.alto : (altosValidos[0] || '100');
+                          setConfig(prev => ({ ...prev, ancho: nuevoAncho, alto: nuevoAlto }));
+                        }}
+                        className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                      >
+                        {anchosDisponiblesCm.map(w => (
+                          <option key={w} value={w.toString()}>
+                            {w} cm ({w * 10} mm)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Alto Disponible (cm):
+                      </label>
+                      <select
+                        value={config.alto}
+                        onChange={(e) => setConfig(prev => ({ ...prev, alto: e.target.value }))}
+                        className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                      >
+                        {altosOpciones.map(h => (
+                          <option key={h} value={h.toString()}>
+                            {h} cm ({h * 10} mm)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Ancho libre (cm):
+                      </label>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        value={config.ancho}
+                        onChange={(e) => setConfig(prev => ({ ...prev, ancho: e.target.value }))}
+                        placeholder="Ej: 115"
+                        className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Alto libre (cm):
+                      </label>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        value={config.alto}
+                        onChange={(e) => setConfig(prev => ({ ...prev, alto: e.target.value }))}
+                        placeholder="Ej: 95"
+                        className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-slate-500 mt-1.5 italic">
                   {config.ancho && config.alto
-                    ? `Medida configurada: ${config.ancho} cm Ancho x ${config.alto} cm Alto`
+                    ? `Medida seleccionada: ${config.ancho} cm Ancho x ${config.alto} cm Alto`
                     : 'Si aún no tenés las medidas exactas, podés dejar los campos vacíos.'}
                 </p>
+
                 {breakdown.moduloEstandarTexto && (
                   <div className={`mt-2 p-2 rounded-lg text-xs font-semibold flex items-center gap-2 border ${
                     breakdown.fueraDeRango
@@ -543,25 +606,17 @@ export default function App() {
                 )}
               </div>
 
-              {/* 5. TIPO DE VIDRIO / CRISTAL */}
+              {/* 5. CRISTAL / VIDRIO */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  5. Tipo de Vidrio / Cristal
+                  5. Cristal / Vidrio
                 </label>
-                <select
-                  value={config.vidrio}
-                  onChange={(e) => setConfig({ ...config, vidrio: e.target.value as TipoVidrio })}
-                  className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                >
-                  {(Object.keys(VIDRIOS) as TipoVidrio[]).map((key) => (
-                    <option key={key} value={key}>
-                      {VIDRIOS[key].nombre}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-slate-500 mt-1 italic">
-                  {VIDRIOS[config.vidrio]?.desc}
-                </p>
+                <div className="w-full min-h-[48px] bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-900 flex items-center justify-between">
+                  <span className="font-bold text-slate-900">Incoloro 4mm</span>
+                  <span className="text-[11px] font-semibold text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded-md">
+                    Incluido
+                  </span>
+                </div>
               </div>
 
               {/* 6. COLOCACIÓN EN OBRA */}

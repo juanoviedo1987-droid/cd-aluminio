@@ -2,5 +2,4 @@ PASO / TEMA,COMO FUNCIONA EN CD ALUMINIO,RECOMENDACION DEL TALLER
 1. Modificar Precios Existentes,En la pestana 1. Catalogo y Precios busca la fila de la medida y edita la columna G (Precio Base).,Modificable libremente
 2. Agregar Productos Nuevos,En la misma pestana 1. Catalogo y Precios agrega filas abajo con su Producto Serie Medidas y Precio. No hace falta crear hojas nuevas.,Todo en una sola tabla unificada
 3. Activar o Pausar Productos,En la columna H (Estado en Web) podes escribir ACTIVO o PAUSADO si temporalmente no hay stock.,Control de stock inmediato
-4. Ajustar Recargos y Factores,En la pestana 2. Recargos y Factores podes retocar los porcentajes de Serie 25 A82 Probba o Anolock.,Ajuste comercial agil
-5. Actualizacion en la Web,Al modificar la planilla Google Sheets replica los cambios automaticamente en la web en pocos minutos.,Sincronizacion en la nube
+4. Actualizacion en la Web,Al modificar la planilla Google Sheets replica los cambios automaticamente en la web en pocos minutos.,Sincronizacion en la nube
