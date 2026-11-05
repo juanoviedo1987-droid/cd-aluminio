@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+*.env
+*.env.*
+scripts/deploy_to_vercel.cjs
 
 # Editor directories and files
 .vscode/*
