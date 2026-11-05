@@ -1,0 +1,5 @@
+"GUÍA RÁPIDA DE USO","INSTRUCCIONES PARA CD ALUMINIO","DETALLE OPERATIVO"
+"1. Modificar Precios","En la pestaña ""1. Catálogo y Precios"", busca el ancho y alto deseado y modifica directamente el monto en la columna E (Precio).","El cambio impacta en la web automáticamente."
+"2. Agregar Nuevas Medidas o Productos","Simplemente agrega una nueva fila al final de la tabla en la pestaña ""1. Catálogo y Precios"" completando: Producto, Serie, Ancho (cm), Alto (cm) y Precio.","No necesitas crear pestañas nuevas. Todo queda ordenado en una única lista."
+"3. Sincronización Inmediata en la Web","Al cambiar un precio en esta planilla, la aplicación web lo toma automáticamente. También cuentas con el botón ""Sincronizar"" en la web para forzar la actualización instantánea.","Sin demoras ni intermediarios."
+"4. Historial de Cotizaciones","Cada presupuesto que guardes o envíes por WhatsApp queda registrado con fecha, cliente y detalle en la pestaña ""2. Historial de Cotizaciones"".","Registro automático y seguro."

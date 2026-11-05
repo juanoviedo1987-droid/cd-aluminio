@@ -110,11 +110,15 @@ export function parsearMatrizSerie20CSV(textoCSV: string): MatrizSerie20Data | n
         const estado = idxEstado >= 0 ? (fila[idxEstado] || '').toUpperCase() : 'ACTIVO';
         if (estado === 'PAUSADO' || estado === 'INACTIVO' || estado === 'NO') continue;
 
-        const anchoNum = parseInt((fila[idxAncho] || '').replace(/[^\d]/g, ''), 10);
-        const altoNum = parseInt((fila[idxAlto] || '').replace(/[^\d]/g, ''), 10);
+        let anchoNum = parseInt((fila[idxAncho] || '').replace(/[^\d]/g, ''), 10);
+        let altoNum = parseInt((fila[idxAlto] || '').replace(/[^\d]/g, ''), 10);
         const precioNum = parseCurrencyString(fila[idxPrecio] || '');
 
         if (!isNaN(anchoNum) && !isNaN(altoNum) && !isNaN(precioNum) && precioNum > 0) {
+          // Si están en cm (< 300), convertimos a mm para el motor interno de la app
+          if (anchoNum < 300) anchoNum = anchoNum * 10;
+          if (altoNum < 300) altoNum = altoNum * 10;
+
           anchosSet.add(anchoNum);
           altosSet.add(altoNum);
           precios[`${anchoNum}x${altoNum}`] = precioNum;

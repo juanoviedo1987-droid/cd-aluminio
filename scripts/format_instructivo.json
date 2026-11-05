@@ -1,0 +1,192 @@
+{
+  "requests": [
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 0,
+          "startRowIndex": 0,
+          "endRowIndex": 1,
+          "startColumnIndex": 0,
+          "endColumnIndex": 3
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "backgroundColor": {
+              "red": 0.094,
+              "green": 0.094,
+              "blue": 0.106
+            },
+            "horizontalAlignment": "CENTER",
+            "verticalAlignment": "MIDDLE",
+            "textFormat": {
+              "foregroundColor": {
+                "red": 1,
+                "green": 1,
+                "blue": 1
+              },
+              "bold": true,
+              "fontSize": 10
+            }
+          }
+        },
+        "fields": "userEnteredFormat(backgroundColor,horizontalAlignment,verticalAlignment,textFormat)"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 0,
+          "startRowIndex": 1,
+          "endRowIndex": 5,
+          "startColumnIndex": 0,
+          "endColumnIndex": 3
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "backgroundColor": {
+              "red": 1,
+              "green": 1,
+              "blue": 1
+            },
+            "verticalAlignment": "MIDDLE",
+            "wrapStrategy": "WRAP",
+            "textFormat": {
+              "foregroundColor": {
+                "red": 0.1,
+                "green": 0.1,
+                "blue": 0.1
+              },
+              "fontSize": 10
+            }
+          }
+        },
+        "fields": "userEnteredFormat(backgroundColor,verticalAlignment,wrapStrategy,textFormat)"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 0,
+          "startRowIndex": 1,
+          "endRowIndex": 5,
+          "startColumnIndex": 0,
+          "endColumnIndex": 1
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "textFormat": {
+              "foregroundColor": {
+                "red": 0.094,
+                "green": 0.094,
+                "blue": 0.106
+              },
+              "bold": true
+            }
+          }
+        },
+        "fields": "userEnteredFormat(textFormat)"
+      }
+    },
+    {
+      "updateBorders": {
+        "range": {
+          "sheetId": 0,
+          "startRowIndex": 1,
+          "endRowIndex": 5,
+          "startColumnIndex": 0,
+          "endColumnIndex": 3
+        },
+        "top": {
+          "style": "SOLID",
+          "color": {
+            "red": 0.9,
+            "green": 0.9,
+            "blue": 0.9
+          }
+        },
+        "bottom": {
+          "style": "SOLID",
+          "color": {
+            "red": 0.9,
+            "green": 0.9,
+            "blue": 0.9
+          }
+        },
+        "left": {
+          "style": "SOLID",
+          "color": {
+            "red": 0.9,
+            "green": 0.9,
+            "blue": 0.9
+          }
+        },
+        "right": {
+          "style": "SOLID",
+          "color": {
+            "red": 0.9,
+            "green": 0.9,
+            "blue": 0.9
+          }
+        },
+        "innerHorizontal": {
+          "style": "SOLID",
+          "color": {
+            "red": 0.93,
+            "green": 0.93,
+            "blue": 0.93
+          }
+        },
+        "innerVertical": {
+          "style": "SOLID",
+          "color": {
+            "red": 0.93,
+            "green": 0.93,
+            "blue": 0.93
+          }
+        }
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 0,
+          "dimension": "COLUMNS",
+          "startIndex": 0,
+          "endIndex": 1
+        },
+        "properties": {
+          "pixelSize": 220
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 0,
+          "dimension": "COLUMNS",
+          "startIndex": 1,
+          "endIndex": 2
+        },
+        "properties": {
+          "pixelSize": 450
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 0,
+          "dimension": "COLUMNS",
+          "startIndex": 2,
+          "endIndex": 3
+        },
+        "properties": {
+          "pixelSize": 280
+        },
+        "fields": "pixelSize"
+      }
+    }
+  ]
+}
