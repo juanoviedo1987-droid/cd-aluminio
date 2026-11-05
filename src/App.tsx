@@ -19,7 +19,6 @@ import type { QuoteConfig, ColorAluminio } from './types/pricing';
 import { TooltipInfo } from './components/TooltipInfo';
 import {
   Phone,
-  MapPin,
   Check,
   Send,
   FileText,
@@ -365,8 +364,8 @@ export default function App() {
                 <span className="text-base md:text-lg font-black tracking-tight uppercase block leading-tight">
                   <span className="text-white">C</span><span className="text-orange-500">D</span> <span className="text-white">ALUMINIO</span>
                 </span>
-                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2 py-0.5 rounded-full">
-                  Beta
+                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                  Taller
                 </span>
               </div>
               <span className="text-xs text-neutral-400 font-medium block">
@@ -375,16 +374,24 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden md:flex items-center gap-1.5 text-xs text-neutral-300">
-              <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
-              Gral. Flores 2979, Montevideo
-            </span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="https://docs.google.com/spreadsheets/d/1CwBvdnMt_JMOejCKHwH0PKnMOaRHw3c4cKXxEDaHgWQ/edit?gid=480036493#gid=480036493"
+              target="_blank"
+              rel="noreferrer"
+              title="Abrir Planilla de Precios en Google Drive"
+              className="flex items-center gap-1.5 text-xs bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 hover:text-white px-3 py-1.5 rounded-full border border-emerald-700/60 font-semibold transition active:scale-95 shadow-sm"
+            >
+              <span>📊</span>
+              <span className="hidden sm:inline">Planilla Drive</span>
+              <span className="sm:hidden">Planilla</span>
+            </a>
+
             <a
               href={`https://wa.me/${DATOS_EMPRESA.whatsappNumero}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition active:scale-95 shadow-sm"
+              className="hidden md:flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition active:scale-95 shadow-sm"
             >
               <Phone className="w-3.5 h-3.5" />
               <span>095 262 858</span>
