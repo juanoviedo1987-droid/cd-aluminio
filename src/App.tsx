@@ -86,8 +86,15 @@ export default function App() {
     descuento: '',
   });
 
-  const anchosDisponiblesCm = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250];
-  const altosOpciones = [40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160];
+  const anchosDisponiblesCm = [...new Set(matrizPrecios.anchos.map(a => a / 10))].sort((a, b) => a - b);
+  const anchoMmActual = Math.round(parseFloat(config.ancho) * 10);
+  const altosFiltradosCm = matrizPrecios.altos
+    .filter(h => matrizPrecios.precios[`${anchoMmActual}x${h}`] !== undefined)
+    .map(h => h / 10)
+    .sort((a, b) => a - b);
+  const altosOpciones = altosFiltradosCm.length > 0
+    ? altosFiltradosCm
+    : matrizPrecios.altos.map(h => h / 10);
 
   const handleForzarSincronizacion = async () => {
     setSincronizandoSheets(true);
@@ -540,7 +547,18 @@ export default function App() {
                       </label>
                       <select
                         value={config.ancho}
-                        onChange={(e) => setConfig(prev => ({ ...prev, ancho: e.target.value }))}
+                        onChange={(e) => {
+                          const nuevoAnchoCm = e.target.value;
+                          const nuevoAnchoMm = Math.round(parseFloat(nuevoAnchoCm) * 10);
+                          const altosValidos = matrizPrecios.altos
+                            .filter(h => matrizPrecios.precios[`${nuevoAnchoMm}x${h}`] !== undefined)
+                            .map(h => (h / 10).toString());
+                          let nuevoAlto = config.alto;
+                          if (!altosValidos.includes(config.alto)) {
+                            nuevoAlto = altosValidos[altosValidos.length - 1] || altosValidos[0] || '100';
+                          }
+                          setConfig(prev => ({ ...prev, ancho: nuevoAnchoCm, alto: nuevoAlto }));
+                        }}
                         className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                       >
                         {anchosDisponiblesCm.map(w => (
