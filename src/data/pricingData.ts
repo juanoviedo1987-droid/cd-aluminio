@@ -232,37 +232,56 @@ export function calcularPresupuesto(
   };
 }
 
-export function generarTextoWhatsApp(breakdown: QuoteBreakdown, productoNombre?: string): string {
+export function generarTextoWhatsApp(breakdown: QuoteBreakdown, productoNombre?: string, clienteNombre?: string): string {
   const nombreAbertura = productoNombre || 'Ventana Corrediza Serie 20';
 
   const lineasConsulta = [
-    `*CONSULTA DE COTIZACIÓN - CD ALUMINIO*`,
-    `Gral. Flores 2979, Montevideo`,
+    `*PRESUPUESTO OFICIAL - CD ALUMINIO*`,
+    `Carpintería en Aluminio | Gral. Flores 2979, Montevideo`,
+    `WhatsApp Taller: 095 262 858`,
     `----------------------------------------`,
+  ];
+
+  if (clienteNombre && clienteNombre.trim()) {
+    lineasConsulta.push(`*Cliente / Referencia:* ${clienteNombre.trim()}`);
+  }
+
+  lineasConsulta.push(
     `*Producto:* ${nombreAbertura}`,
     `*Línea / Serie:* Serie 20`,
     `*Color:* ${breakdown.colorNombre}`,
     `*Medidas:* ${breakdown.medidaTexto}`,
-  ];
+  );
 
   if (breakdown.moduloEstandarTexto) {
     lineasConsulta.push(`*Módulo Taller:* ${breakdown.moduloEstandarTexto}`);
   }
 
-  lineasConsulta.push(`*Cristal:* ${breakdown.vidrioNombre}`);
-  lineasConsulta.push(`*Instalación:* ${breakdown.conColocacion ? 'Con colocación en obra' : 'Retiro en taller'}`);
+  lineasConsulta.push(
+    `*Cristal:* ${breakdown.vidrioNombre}`,
+    `*Instalación:* ${breakdown.conColocacion ? 'Con colocación en obra' : 'Retiro en taller'}`
+  );
 
   if (breakdown.tieneDescuento) {
-    lineasConsulta.push(`*Precio de lista oficial:* ${breakdown.precioListaTexto}`);
-    lineasConsulta.push(`*Bonificación especial de taller:* -${breakdown.descuentoPorcentaje}% (${breakdown.descuentoMontoTexto})`);
-    lineasConsulta.push(`*Total bonificado:* ${breakdown.precioTexto}`);
+    lineasConsulta.push(
+      `----------------------------------------`,
+      `*Precio de lista:* ${breakdown.precioListaTexto}`,
+      `*Bonificación especial (-${breakdown.descuentoPorcentaje}%):* ${breakdown.descuentoMontoTexto}`,
+      `*TOTAL FINAL BONIFICADO:* ${breakdown.precioTexto}`
+    );
   } else {
-    lineasConsulta.push(`*Estimación oficial:* ${breakdown.precioTexto}`);
+    lineasConsulta.push(
+      `----------------------------------------`,
+      `*TOTAL ESTIMADO:* ${breakdown.precioTexto}`
+    );
   }
 
-  lineasConsulta.push(`----------------------------------------`);
-  lineasConsulta.push(`_Nota: Presupuesto referencial de taller sujeto a validación técnica de escuadría en obra._`);
-  lineasConsulta.push(`Hola CD Aluminio, les envío esta configuración para coordinar rectificación y presupuesto formal. Aguardo su respuesta.`);
+  lineasConsulta.push(
+    `----------------------------------------`,
+    `• Validez de la cotización: 15 días corridos.`,
+    `• Forma de pago: 50% seña para reserva de perfiles, 50% saldo contra entrega.`,
+    `• Presupuesto referencial de taller sujeto a rectificación técnica de vano en obra.`
+  );
 
   return encodeURIComponent(lineasConsulta.join('\n'));
 }

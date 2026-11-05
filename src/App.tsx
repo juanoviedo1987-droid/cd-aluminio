@@ -49,6 +49,9 @@ export default function App() {
   const [sincronizandoSheets, setSincronizandoSheets] = useState(false);
   const [ultimaSincronizacion, setUltimaSincronizacion] = useState<Date | null>(null);
 
+  // Cliente o referencia opcional para personalizar el presupuesto
+  const [nombreCliente, setNombreCliente] = useState('');
+
   useEffect(() => {
     let montado = true;
     async function cargar() {
@@ -131,8 +134,10 @@ export default function App() {
 
   // Generar QR dinámico para WhatsApp con el presupuesto configurado
   useEffect(() => {
-    const textoWhatsApp = generarTextoWhatsApp(breakdown, prodActual.nombre);
-    const whatsappUrl = `https://wa.me/${DATOS_EMPRESA.whatsappNumero}?text=${textoWhatsApp}`;
+    const textoConfirmacion = encodeURIComponent(
+      `Hola CD Aluminio, recibí el presupuesto para ${prodActual.nombre} (${breakdown.medidaTexto}) por ${breakdown.precioTexto} y quiero coordinar la seña y rectificación en obra.`
+    );
+    const whatsappUrl = `https://wa.me/${DATOS_EMPRESA.whatsappNumero}?text=${textoConfirmacion}`;
     QRCode.toDataURL(whatsappUrl, {
       width: 140,
       margin: 1,
@@ -146,15 +151,16 @@ export default function App() {
   }, [breakdown, prodActual.nombre]);
 
   const handleCopiar = () => {
-    const textoDecodificado = decodeURIComponent(generarTextoWhatsApp(breakdown, prodActual.nombre));
+    const textoDecodificado = decodeURIComponent(generarTextoWhatsApp(breakdown, prodActual.nombre, nombreCliente));
     navigator.clipboard.writeText(textoDecodificado);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2500);
   };
 
   const handleWhatsApp = () => {
-    const texto = generarTextoWhatsApp(breakdown, prodActual.nombre);
-    window.open(`https://wa.me/${DATOS_EMPRESA.whatsappNumero}?text=${texto}`, '_blank');
+    const texto = generarTextoWhatsApp(breakdown, prodActual.nombre, nombreCliente);
+    // Abre WhatsApp para que el taller elija a qué cliente o contacto enviar el presupuesto
+    window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
   };
 
   const handleDescargarImagen = async () => {
@@ -164,7 +170,8 @@ export default function App() {
       const canvas = await html2canvas(modalHojaRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       const link = document.createElement('a');
       const medNombre = config.ancho && config.alto ? `${config.ancho}x${config.alto}cm` : 'a_medida';
-      link.download = `Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${medNombre}.png`;
+      const refNombre = nombreCliente.trim() ? `_${nombreCliente.trim().replace(/\s+/g, '_')}` : '';
+      link.download = `Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${medNombre}${refNombre}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
@@ -184,8 +191,9 @@ export default function App() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       const medNombre = config.ancho && config.alto ? `${config.ancho}x${config.alto}cm` : 'a_medida';
+      const refNombre = nombreCliente.trim() ? `_${nombreCliente.trim().replace(/\s+/g, '_')}` : '';
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      pdf.save(`Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${medNombre}.pdf`);
+      pdf.save(`Presupuesto_CD_Aluminio_${breakdown.serieNombre}_${medNombre}${refNombre}.pdf`);
     } catch (err) {
       console.error('Error generando PDF:', err);
     } finally {
@@ -240,8 +248,8 @@ export default function App() {
                 <span className="text-xs text-neutral-400 font-medium">
                   Cotizador Oficial de Fábrica
                 </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2 py-0.5 rounded-full">
-                  Versión Beta
+                <span className="text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                  Acceso Taller
                 </span>
               </div>
             </div>
@@ -743,6 +751,26 @@ export default function App() {
                 )}
               </div>
 
+              {/* 8. CLIENTE / REFERENCIA (OPCIONAL) */}
+              <div className="space-y-1.5 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    8. Cliente / Referencia de Obra
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-medium">Opcional</span>
+                </div>
+                <input
+                  type="text"
+                  value={nombreCliente}
+                  onChange={(e) => setNombreCliente(e.target.value)}
+                  placeholder="Ej: Arq. Rossi - Obra Pocitos / Cliente Mostrador"
+                  className="w-full min-h-[46px] bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                />
+                <p className="text-[11px] text-slate-400 italic">
+                  Si se completa, figurará en el membrete del PDF y en el mensaje de WhatsApp.
+                </p>
+              </div>
+
             </div>
           </div>
 
@@ -921,13 +949,21 @@ export default function App() {
               </div>
 
               {/* FECHA Y VALIDEZ */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center text-[11px]">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-wrap gap-2 justify-between items-center text-[11px]">
                 <div>
                   <span className="text-slate-500 block">Fecha de Emisión:</span>
                   <span className="font-bold text-slate-800">
                     {FECHA_EMISION_HOY}
                   </span>
                 </div>
+                {nombreCliente.trim() && (
+                  <div>
+                    <span className="text-slate-500 block">Cliente / Obra:</span>
+                    <span className="font-bold text-slate-900">
+                      {nombreCliente.trim()}
+                    </span>
+                  </div>
+                )}
                 <div className="text-right">
                   <span className="text-slate-500 block">Validez Presupuesto:</span>
                   <span className="font-bold text-orange-600">
@@ -994,11 +1030,11 @@ export default function App() {
               <div className="bg-neutral-900 text-white p-3.5 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
                   <span className="font-bold text-xs tracking-wide block">
-                    {breakdown.tieneDescuento ? 'TOTAL ESTIMADO CON BONIFICACIÓN:' : 'ESTADO ESTIMACIÓN:'}
+                    {breakdown.tieneDescuento ? 'TOTAL ESTIMADO CON BONIFICACIÓN:' : 'TOTAL PRESUPUESTO ($ UYU):'}
                   </span>
                   <span className="text-[9px] text-neutral-400 block">Sujeto a validación técnica en obra</span>
                 </div>
-                <span className="text-sm sm:text-base font-black text-orange-400 text-right">
+                <span className="text-base sm:text-lg font-black text-orange-400 text-right">
                   {breakdown.precioTexto}
                 </span>
               </div>
